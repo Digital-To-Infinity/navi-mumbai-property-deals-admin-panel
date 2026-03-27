@@ -9,7 +9,7 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import logo from "../../public/nm-property-logo.png"
+import logo from "../assets/nm-property-logo.png";
 
 const Sidebar = ({ isOpen, onClose }) => {
   const { logout, user } = useAuth();
