@@ -21,6 +21,8 @@
   --radius-xl: 1rem;
   --radius-lg: 0.75rem;
   --radius-md: 0.5rem;
+
+  --breakpoint-nav: 770px;
 }
 
 :root {
@@ -117,8 +119,8 @@
 }
 
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;  
+  scrollbar-width: none;  
 }
 
 .custom-date-input::-webkit-calendar-picker-indicator {

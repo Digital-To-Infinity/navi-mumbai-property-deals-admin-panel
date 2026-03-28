@@ -31,17 +31,21 @@ const Sidebar = ({ isOpen, onClose }) => {
   return (
     <aside className={`
       fixed top-0 left-0 h-full bg-white border-r border-slate-100 z-40 transition-all duration-300
-      ${isOpen ? 'w-72 translate-x-0' : 'w-72 -translate-x-full md:translate-x-0'}
+      ${isOpen ? 'w-72 translate-x-0' : 'w-72 -translate-x-full nav:translate-x-0'}
     `}>
+      {/* Close Button */}
+      <button
+        className="absolute top-2 right-2 nav:hidden p-2 bg-white border border-slate-100 text-slate-500 hover:text-red-500 hover:bg-red-50 hover:border-red-100 rounded-full shadow-sm transition-all duration-300 transform hover:rotate-90 active:scale-90 z-50 cursor-pointer"
+        onClick={onClose}
+        aria-label="Close Sidebar"
+      >
+        <X size={18} strokeWidth={2.5} />
+      </button>
+
       <div className="flex flex-col h-full overflow-hidden">
         {/* Logo */}
-        <div className="p-8 flex items-center justify-between">
-          <div className="flex items-center">
-            <img src={logo} alt="Navi Mumbai Property Deals" className="h-14 w-auto" />
-          </div>
-          <button className="md:hidden p-2 hover:bg-slate-50 rounded-lg transition-colors" onClick={onClose}>
-            <X size={20} />
-          </button>
+        <div className="p-8 flex items-center">
+          <img src={logo} alt="Navi Mumbai Property Deals" className="h-14 w-auto" />
         </div>
 
         {/* Navigation */}
@@ -52,7 +56,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               to={item.path}
               end={item.path === '/admin-panel'}
               onClick={() => {
-                if (window.innerWidth < 768) onClose();
+                if (window.innerWidth < 770) onClose();
               }}
               className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
             >

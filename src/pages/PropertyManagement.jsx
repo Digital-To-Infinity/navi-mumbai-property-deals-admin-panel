@@ -48,12 +48,20 @@ const PropertyManagement = () => {
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
-  
-  // Pagination State
+
+  // Per-page State
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const perPageRef = useRef(null);
+
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -197,14 +205,14 @@ const PropertyManagement = () => {
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col min-[427px]:flex-row min-[427px]:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Property Management</h1>
-          <p className="text-slate-500">Manage your real estate listings, status, and pricing.</p>
+          <h1 className="text-2xl max-[426px]:text-3xl max-[426px]:mb-4 max-[426px]:text-center font-bold text-slate-900">Property Management</h1>
+          <p className="text-slate-500 hidden sm:block">Manage your real estate listings, status, and pricing.</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="ag-button flex items-center justify-center space-x-2 w-full md:w-auto cursor-pointer"
+          className="ag-button flex items-center justify-center space-x-2 w-full min-[427px]:w-auto cursor-pointer whitespace-nowrap"
         >
           <Plus size={20} />
           <span>Add Property</span>
@@ -212,17 +220,17 @@ const PropertyManagement = () => {
       </div>
 
       {/* Tabs & Filters */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-x-auto no-scrollbar pb-2">
-        <div className="flex items-center bg-white p-1 rounded-xl border border-slate-100 w-fit">
+      <div className="flex flex-col nav:flex-row nav:items-center justify-between gap-6">
+        <div className="flex items-center bg-white p-1 rounded-xl border border-slate-100 w-full nav:w-fit overflow-x-auto no-scrollbar shrink-0">
           {['all', 'active', 'sold', 'draft', 'archived'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`
-                px-10 py-2 rounded-lg text-sm font-semibold capitalize transition-all cursor-pointer
+                flex-1 nav:flex-none px-4 nav:px-10 py-2.5 rounded-lg text-sm font-semibold capitalize transition-all cursor-pointer whitespace-nowrap
                 ${activeTab === tab
-                  ? 'bg-primary text-white'
-                  : 'text-slate-500 hover:text-black'}
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-slate-500 hover:text-black hover:bg-slate-50'}
               `}
             >
               {tab}
@@ -231,11 +239,11 @@ const PropertyManagement = () => {
         </div>
 
         {/* Search Bar */}
-        <div className="flex items-center space-x-3 group">
-          <div className="relative">
+        <div className="flex items-center space-x-3 group w-full nav:w-auto">
+          <div className="relative w-full">
             <motion.div
               initial={false}
-              animate={{ width: searchTerm ? '360px' : '280px' }}
+              animate={{ width: windowWidth <= 769 ? '100%' : (searchTerm ? '360px' : '280px') }}
               className="relative flex items-center"
             >
               <Search
@@ -295,10 +303,10 @@ const PropertyManagement = () => {
                         </div>
                         <div>
                           <div className="flex items-center space-x-2">
-                             <p className="text-base font-bold text-semibold truncate max-w-[250px]">{property.title}</p>
-                             {property.featured && (
-                               <Star size={14} className="fill-amber-400 text-amber-400 shrink-0" title="Featured" />
-                             )}
+                            <p className="text-base font-bold text-semibold truncate max-w-[250px]">{property.title}</p>
+                            {property.featured && (
+                              <Star size={14} className="fill-amber-400 text-amber-400 shrink-0" title="Featured" />
+                            )}
                           </div>
                           <p className="text-sm text-slate-500">{property.location}</p>
                         </div>
@@ -310,10 +318,10 @@ const PropertyManagement = () => {
                     <td className="px-6 py-4">
                       <span className="text-sm text-slate-700 font-medium">{property.category}</span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 max-[426px]:px-2 py-4">
                       <span className="text-sm font-bold text-black">{property.price}</span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 max-[426px]:px-2 py-4">
                       <span className="text-sm text-slate-600 font-medium">{property.date}</span>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -332,8 +340,8 @@ const PropertyManagement = () => {
                         >
                           <Trash2 size={18} />
                         </button>
-                        <div 
-                          className="relative" 
+                        <div
+                          className="relative"
                           ref={openDropdownId === property.id ? dropdownRef : null}
                           onMouseEnter={() => setOpenDropdownId(property.id)}
                           onMouseLeave={() => setOpenDropdownId(null)}
@@ -361,7 +369,7 @@ const PropertyManagement = () => {
                                   <Eye size={16} />
                                   <span>Preview Listing</span>
                                 </button>
-                                <button 
+                                <button
                                   onClick={() => handleShare(property.id)}
                                   className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer"
                                 >
@@ -375,7 +383,7 @@ const PropertyManagement = () => {
                                   <Copy size={16} />
                                   <span>Duplicate Property</span>
                                 </button>
-                                <button 
+                                <button
                                   onClick={() => handleToggleFeatured(property.id)}
                                   className={`w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer 
                                     ${property.featured ? 'text-amber-600 bg-amber-50/50 hover:bg-amber-100' : 'text-slate-600 hover:bg-slate-50 hover:text-black'}`}
@@ -383,7 +391,7 @@ const PropertyManagement = () => {
                                   <Star size={16} className={property.featured ? 'fill-current' : ''} />
                                   <span>{property.featured ? 'Remove from Featured' : 'Mark as Featured'}</span>
                                 </button>
-                                <button 
+                                <button
                                   onClick={() => handleStatusChange(property.id, 'Archived')}
                                   className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
                                 >
@@ -441,22 +449,22 @@ const PropertyManagement = () => {
         </div>
 
         {/* Pagination */}
-        <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-6">
+        <div className="px-6 py-6 bg-slate-50/50 border-t border-slate-100 flex flex-col nav:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-8 w-full nav:w-auto">
             <p className="text-sm text-black font-medium whitespace-nowrap">
               Showing <span className="text-primary font-bold">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-primary font-bold">{Math.min(currentPage * itemsPerPage, filteredProperties.length)}</span> of <span className="text-primary font-bold">{filteredProperties.length}</span> properties
             </p>
-            
-            <div 
-              className="relative flex items-center space-x-2" 
+
+            <div
+              className="relative flex items-center space-x-3"
               ref={perPageRef}
               onMouseEnter={() => setShowPerPageDropdown(true)}
               onMouseLeave={() => setShowPerPageDropdown(false)}
             >
               <span className="text-xs text-black font-bold uppercase tracking-wider">Per Page:</span>
-              <button 
+              <button
                 onClick={() => setShowPerPageDropdown(!showPerPageDropdown)}
-                className={`flex items-center justify-between w-18 h-7 bg-white border border-slate-200 rounded-xl px-3 text-sm font-bold transition-all cursor-pointer active:scale-95 ${showPerPageDropdown ? 'border-primary bg-primary/5 text-primary' : 'text-slate-700'}`}
+                className={`flex items-center justify-between min-w-[70px] h-6 bg-white border border-slate-200 rounded-xl px-3 text-sm font-bold transition-all cursor-pointer active:scale-95 ${showPerPageDropdown ? 'border-primary bg-primary/5 text-primary' : 'text-slate-700'}`}
               >
                 <span>{itemsPerPage}</span>
                 <ChevronDown size={14} className={`transition-transform duration-300 ${showPerPageDropdown ? 'rotate-180' : 'text-slate-500'}`} />
@@ -479,8 +487,8 @@ const PropertyManagement = () => {
                           setShowPerPageDropdown(false);
                         }}
                         className={`w-full flex items-center justify-between px-4 py-2 text-sm font-bold transition-all cursor-pointer
-                          ${itemsPerPage === val 
-                            ? 'text-primary bg-primary/5' 
+                          ${itemsPerPage === val
+                            ? 'text-primary bg-primary/5'
                             : 'text-slate-600 hover:bg-slate-50 hover:text-black'}`}
                       >
                         <span>{val} Rows</span>
@@ -492,37 +500,38 @@ const PropertyManagement = () => {
               </AnimatePresence>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <button 
+
+          <div className="flex items-center justify-between w-full nav:w-auto nav:justify-end nav:space-x-2">
+            <button
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
               className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all border shrink-0 
-                ${currentPage === 1 
-                  ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' 
+                ${currentPage === 1
+                  ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed'
                   : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer shadow-sm active:scale-95'}`}
             >
               Previous
             </button>
             <div className="hidden sm:flex items-center space-x-1">
-               {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
-                 <button
-                   key={num}
-                   onClick={() => setCurrentPage(num)}
-                   className={`w-9 h-9 rounded-full text-sm font-bold transition-all cursor-pointer
-                     ${currentPage === num 
-                       ? 'bg-primary text-white' 
-                       : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'}`}
-                 >
-                   {num}
-                 </button>
-               ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
+                <button
+                  key={num}
+                  onClick={() => setCurrentPage(num)}
+                  className={`w-9 h-9 rounded-full text-sm font-bold transition-all cursor-pointer
+                     ${currentPage === num
+                      ? 'bg-primary text-white shadow-md'
+                      : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'}`}
+                >
+                  {num}
+                </button>
+              ))}
             </div>
-            <button 
+            <button
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages || totalPages === 0}
               className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all border shrink-0
                 ${currentPage === totalPages || totalPages === 0
-                  ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' 
+                  ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed'
                   : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer active:scale-95'}`}
             >
               Next
