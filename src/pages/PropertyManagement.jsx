@@ -1,37 +1,163 @@
-import React, { useState } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Edit, 
-  Trash2, 
-  ChevronDown,
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import PropertyForm from '../components/PropertyForm';
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
   Monitor,
   CheckCircle,
   Clock,
   Archive,
   MoreVertical,
-  Building2
+  Building2,
+  X,
+  Copy,
+  Eye,
+  Star,
+  Share2,
+  ChevronDown
 } from 'lucide-react';
-import PropertyForm from '../components/PropertyForm';
+
 
 const propertiesData = [
-  { id: 1, title: 'Luxury Villa in Belapur', location: 'CBD Belapur, Navi Mumbai', price: '₹4.5 Cr', status: 'Active', category: 'Villa', date: '2026-03-20' },
-  { id: 2, title: 'Modern Apartment in Vashi', location: 'Sector 17, Vashi', price: '₹2.8 Cr', status: 'Sold', category: 'Apartment', date: '2026-03-15' },
-  { id: 3, title: 'Studio Flat in Kharghar', location: 'Kharghar, Navi Mumbai', price: '₹65 L', status: 'Draft', category: 'Flat', date: '2026-03-10' },
-  { id: 4, title: 'Penthouse with View', location: 'Nerul, Navi Mumbai', price: '₹8.2 Cr', status: 'Active', category: 'Penthouse', date: '2026-03-05' },
-  { id: 5, title: 'Office Space Belapur', location: 'Belapur Station, Navi Mumbai', price: '₹12 Cr', status: 'Active', category: 'Commercial', date: '2026-02-28' },
+  { id: 1, title: 'Luxury Villa in Belapur', location: 'CBD Belapur, Navi Mumbai', price: '₹4.5 Cr', status: 'Active', category: 'Villa', date: '2026-03-20', featured: true },
+  { id: 2, title: 'Modern Apartment in Vashi', location: 'Sector 17, Vashi', price: '₹2.8 Cr', status: 'Sold', category: 'Apartment', date: '2026-03-15', featured: false },
+  { id: 3, title: 'Studio Flat in Kharghar', location: 'Kharghar, Navi Mumbai', price: '₹65 L', status: 'Draft', category: 'Flat', date: '2026-03-10', featured: false },
+  { id: 4, title: 'Penthouse with View', location: 'Nerul, Navi Mumbai', price: '₹8.2 Cr', status: 'Active', category: 'Penthouse', date: '2026-03-05', featured: false },
+  { id: 5, title: 'Office Space Belapur', location: 'Belapur Station, Navi Mumbai', price: '₹12 Cr', status: 'Active', category: 'Commercial', date: '2026-02-28', featured: false },
+  { id: 6, title: 'Commercial Shop in Seawoods', location: 'Seawoods, Navi Mumbai', price: '₹1.5 Cr', status: 'Active', category: 'Commercial', date: '2026-02-25', featured: false },
+  { id: 7, title: '2BHK Apartment in Sanpada', location: 'Section 10, Sanpada', price: '₹1.2 Cr', status: 'Active', category: 'Apartment', date: '2026-02-20', featured: true },
+  { id: 8, title: 'Row House in Kopar Khairane', location: 'Sector 5, Kopar Khairane', price: '₹3.4 Cr', status: 'Sold', category: 'House', date: '2026-02-15', featured: false },
+  { id: 9, title: '1RK Studio in Airoli', location: 'Airoli, Navi Mumbai', price: '₹45 L', status: 'Active', category: 'Studio', date: '2026-02-10', featured: false },
+  { id: 10, title: 'Garden Facing Flat in Ulwe', location: 'Sector 19, Ulwe', price: '₹75 L', status: 'Active', category: 'Apartment', date: '2026-02-05', featured: true },
+  { id: 11, title: 'Premium Office Hub', location: 'Turbhe, Navi Mumbai', price: '₹5.5 Cr', status: 'Active', category: 'Commercial', date: '2026-01-30', featured: false },
+  { id: 12, title: 'Spacious 3BHK in Kamothe', location: 'Sector 21, Kamothe', price: '₹1.1 Cr', status: 'Draft', category: 'Apartment', date: '2026-01-25', featured: false },
+  { id: 13, title: 'Cozy Villa in Ghansoli', location: 'Ghansoli, Navi Mumbai', price: '₹2.1 Cr', status: 'Active', category: 'Villa', date: '2026-01-20', featured: false },
+  { id: 14, title: 'Retail Space Nerul', location: 'Nerul East, Navi Mumbai', price: '₹85 L', status: 'Sold', category: 'Commercial', date: '2026-01-15', featured: false },
+  { id: 15, title: 'New Launch in Dronagiri', location: 'Dronagiri, Navi Mumbai', price: '₹40 L', status: 'Active', category: 'Apartment', date: '2026-01-10', featured: true },
 ];
 
 const PropertyManagement = () => {
+  const [properties, setProperties] = useState(propertiesData);
   const [showForm, setShowForm] = useState(false);
   const [editingProperty, setEditingProperty] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+  const dropdownRef = useRef(null);
+  const searchInputRef = useRef(null);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
+  const perPageRef = useRef(null);
 
-  const filteredProperties = propertiesData.filter(prop => {
-    if (activeTab === 'all') return true;
-    return prop.status.toLowerCase() === activeTab.toLowerCase();
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpenDropdownId(null);
+      }
+      if (perPageRef.current && !perPageRef.current.contains(event.target)) {
+        setShowPerPageDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Reset to first page when filtering or searching
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, activeTab]);
+
+  const handleStatusChange = (id, newStatus) => {
+    setProperties(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
+    setOpenDropdownId(null);
+  };
+
+  const handleDuplicate = (property) => {
+    const duplicatedProperty = {
+      ...property,
+      id: Math.max(0, ...properties.map(p => p.id)) + 1,
+      title: `${property.title} (Copy)`,
+      date: new Date().toISOString().split('T')[0],
+    };
+    setProperties(prev => [duplicatedProperty, ...prev]);
+    setOpenDropdownId(null);
+  };
+  const handleToggleFeatured = (id) => {
+    setProperties(prev => prev.map(p => p.id === id ? { ...p, featured: !p.featured } : p));
+  };
+
+  const handleShare = (id) => {
+    const propertyLink = `https://navimumbaipropertydeals.com/property/${id}`;
+    navigator.clipboard.writeText(propertyLink).then(() => {
+      // In a real app, I'd use a toast notification here
+      alert(`Listing Link Copied: ${propertyLink}`);
+    });
+  };
+
+  const handleSave = (formData) => {
+    if (editingProperty) {
+      setProperties(prev => prev.map(p =>
+        p.id === editingProperty.id
+          ? {
+            ...p,
+            ...formData,
+            category: formData.propertyType || p.category, // Map propertyType back to category
+            id: p.id
+          }
+          : p
+      ));
+    } else {
+      const newProperty = {
+        ...formData,
+        id: Math.max(0, ...properties.map(p => p.id)) + 1,
+        date: new Date().toISOString().split('T')[0],
+        status: 'Active',
+        category: formData.propertyType || 'Villa',
+        price: formData.price || '₹0',
+      };
+      setProperties(prev => [newProperty, ...prev]);
+    }
+    setShowForm(false);
+    setEditingProperty(null);
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to delete this property?')) {
+      setProperties(prev => prev.filter(p => p.id !== id));
+    }
+  };
+
+  const filteredProperties = properties.filter(prop => {
+    const matchesTab = activeTab === 'all' || prop.status.toLowerCase() === activeTab.toLowerCase();
+    const matchesSearch =
+      prop.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prop.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (prop.category && prop.category.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    return matchesTab && matchesSearch;
   });
+
+  const totalItems = filteredProperties.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentItems = filteredProperties.slice(startIndex, startIndex + itemsPerPage);
 
   const getStatusBadge = (status) => {
     switch (status.toLowerCase()) {
@@ -41,29 +167,31 @@ const PropertyManagement = () => {
         return <span className="ag-badge bg-blue-50 text-blue-700 border-blue-100"><Monitor size={12} className="mr-1" /> Sold</span>;
       case 'draft':
         return <span className="ag-badge ag-badge-draft"><Clock size={12} className="mr-1" /> Draft</span>;
+      case 'archived':
+        return <span className="ag-badge bg-red-50 text-red-700 border-red-100"><Archive size={12} className="mr-1" /> Archived</span>;
       default:
         return <span className="ag-badge bg-slate-50 text-slate-700 border-slate-100"><Archive size={12} className="mr-1" /> {status}</span>;
     }
   };
 
   if (showForm) {
-      return (
-          <div className="animate-fade-in">
-              <div className="flex items-center justify-between mb-8">
-                  <div>
-                      <h1 className="text-2xl font-bold text-slate-900">{editingProperty ? 'Edit Property' : 'Add New Property'}</h1>
-                      <p className="text-slate-500">Fill in the details below to list a new property.</p>
-                  </div>
-                  <button 
-                      onClick={() => { setShowForm(false); setEditingProperty(null); }}
-                      className="text-slate-500 hover:text-slate-800 font-semibold"
-                  >
-                      Cancel
-                  </button>
-              </div>
-              <PropertyForm initialData={editingProperty} onSave={() => setShowForm(false)} />
+    return (
+      <div className="animate-fade-in">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">{editingProperty ? 'Edit Property' : 'Add New Property'}</h1>
+            <p className="text-slate-500 mt-2">Fill in the details below to list a new property.</p>
           </div>
-      )
+          <button
+            onClick={() => { setShowForm(false); setEditingProperty(null); }}
+            className="text-slate-500 hover:text-black font-semibold cursor-pointer"
+          >
+            Cancel
+          </button>
+        </div>
+        <PropertyForm initialData={editingProperty} onSave={handleSave} />
+      </div>
+    )
   }
 
   return (
@@ -74,9 +202,9 @@ const PropertyManagement = () => {
           <h1 className="text-2xl font-bold text-slate-900">Property Management</h1>
           <p className="text-slate-500">Manage your real estate listings, status, and pricing.</p>
         </div>
-        <button 
-            onClick={() => setShowForm(true)}
-            className="ag-button flex items-center justify-center space-x-2 w-full md:w-auto"
+        <button
+          onClick={() => setShowForm(true)}
+          className="ag-button flex items-center justify-center space-x-2 w-full md:w-auto cursor-pointer"
         >
           <Plus size={20} />
           <span>Add Property</span>
@@ -86,15 +214,15 @@ const PropertyManagement = () => {
       {/* Tabs & Filters */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-x-auto no-scrollbar pb-2">
         <div className="flex items-center bg-white p-1 rounded-xl border border-slate-100 w-fit">
-          {['all', 'active', 'sold', 'draft'].map((tab) => (
+          {['all', 'active', 'sold', 'draft', 'archived'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`
-                px-6 py-2 rounded-lg text-sm font-semibold capitalize transition-all
-                ${activeTab === tab 
-                  ? 'bg-primary text-white shadow-sm' 
-                  : 'text-slate-500 hover:text-slate-900'}
+                px-10 py-2 rounded-lg text-sm font-semibold capitalize transition-all cursor-pointer
+                ${activeTab === tab
+                  ? 'bg-primary text-white'
+                  : 'text-slate-500 hover:text-black'}
               `}
             >
               {tab}
@@ -102,18 +230,41 @@ const PropertyManagement = () => {
           ))}
         </div>
 
-        <div className="flex items-center space-x-3">
+        {/* Search Bar */}
+        <div className="flex items-center space-x-3 group">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search properties..." 
-              className="bg-white border border-slate-100 rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none w-64 transition-all"
-            />
+            <motion.div
+              initial={false}
+              animate={{ width: searchTerm ? '360px' : '280px' }}
+              className="relative flex items-center"
+            >
+              <Search
+                className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200 ${searchTerm ? 'text-primary' : 'text-slate-500'}`}
+                size={18}
+              />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by title or location..."
+                className="w-full bg-white border border-slate-200 rounded-2xl py-2.5 pl-11 pr-10 text-sm focus:ring-primary focus:border-primary focus:outline-none transition-all placeholder:text-slate-500 hover:border-slate-300"
+              />
+              <AnimatePresence>
+                {searchTerm && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 p-1 hover:bg-slate-100 rounded-lg text-black transition-colors cursor-pointer"
+                  >
+                    <X size={14} />
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </motion.div>
           </div>
-          <button className="p-2.5 bg-white border border-slate-100 rounded-xl text-slate-600 hover:bg-slate-50 transition-all">
-            <Filter size={18} />
-          </button>
         </div>
       </div>
 
@@ -123,72 +274,260 @@ const PropertyManagement = () => {
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50/50 border-b border-slate-100">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Property Details</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Price</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Published</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Property Details</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Category</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Price</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Published</th>
                 <th className="px-6 py-4 text-right"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filteredProperties.map((property) => (
-                <tr key={property.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-slate-100 rounded-xl overflow-hidden shrink-0">
-                          {/* Fallback image */}
-                          <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary">
+              {currentItems.length > 0 ? (
+                currentItems.map((property) => (
+                  <tr key={property.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-slate-100 rounded-xl overflow-hidden shrink-0">
+                          <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary">
                             <Building2 size={24} />
                           </div>
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                             <p className="text-base font-bold text-semibold truncate max-w-[250px]">{property.title}</p>
+                             {property.featured && (
+                               <Star size={14} className="fill-amber-400 text-amber-400 shrink-0" title="Featured" />
+                             )}
+                          </div>
+                          <p className="text-sm text-slate-500">{property.location}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900 truncate max-w-[200px]">{property.title}</p>
-                        <p className="text-xs text-slate-500">{property.location}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      {getStatusBadge(property.status)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-slate-700 font-medium">{property.category}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-bold text-black">{property.price}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-slate-600 font-medium">{property.date}</span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        <button
+                          onClick={() => { setEditingProperty(property); setShowForm(true); }}
+                          className="p-2 text-slate-500 hover:text-black transition-colors hover:bg-white rounded-lg border border-transparent hover:border-slate-100 cursor-pointer"
+                          title="Edit"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(property.id)}
+                          className="p-2 text-slate-500 hover:text-red-500 transition-colors hover:bg-white rounded-lg border border-transparent hover:border-slate-100 cursor-pointer"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                        <div 
+                          className="relative" 
+                          ref={openDropdownId === property.id ? dropdownRef : null}
+                          onMouseEnter={() => setOpenDropdownId(property.id)}
+                          onMouseLeave={() => setOpenDropdownId(null)}
+                        >
+                          <button
+                            onClick={() => setOpenDropdownId(openDropdownId === property.id ? null : property.id)}
+                            className={`p-2 transition-colors rounded-lg cursor-pointer ${openDropdownId === property.id ? 'bg-slate-100 text-black' : 'text-slate-400 hover:text-slate-800'}`}
+                            title="Action"
+                          >
+                            <MoreVertical size={18} />
+                          </button>
+
+                          <AnimatePresence>
+                            {openDropdownId === property.id && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden py-2"
+                              >
+                                <div className="px-4 py-2 border-b border-slate-50 mb-1">
+                                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Quick Actions</p>
+                                </div>
+                                <button className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer">
+                                  <Eye size={16} />
+                                  <span>Preview Listing</span>
+                                </button>
+                                <button 
+                                  onClick={() => handleShare(property.id)}
+                                  className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer"
+                                >
+                                  <Share2 size={16} />
+                                  <span>Share Listing</span>
+                                </button>
+                                <button
+                                  onClick={() => handleDuplicate(property)}
+                                  className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer"
+                                >
+                                  <Copy size={16} />
+                                  <span>Duplicate Property</span>
+                                </button>
+                                <button 
+                                  onClick={() => handleToggleFeatured(property.id)}
+                                  className={`w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer 
+                                    ${property.featured ? 'text-amber-600 bg-amber-50/50 hover:bg-amber-100' : 'text-slate-600 hover:bg-slate-50 hover:text-black'}`}
+                                >
+                                  <Star size={16} className={property.featured ? 'fill-current' : ''} />
+                                  <span>{property.featured ? 'Remove from Featured' : 'Mark as Featured'}</span>
+                                </button>
+                                <button 
+                                  onClick={() => handleStatusChange(property.id, 'Archived')}
+                                  className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+                                >
+                                  <Archive size={16} />
+                                  <span>Archive Property</span>
+                                </button>
+
+                                <div className="px-4 py-2 border-y border-slate-50 my-1 bg-slate-50/50">
+                                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Change Status</p>
+                                </div>
+                                {['Active', 'Sold', 'Draft'].map((status) => (
+                                  <button
+                                    key={status}
+                                    onClick={() => handleStatusChange(property.id, status)}
+                                    className={`w-full flex items-center justify-between px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer 
+                                      ${property.status === status
+                                        ? 'text-primary font-bold bg-primary/5'
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-black'}`}
+                                  >
+                                    <span>{status}</span>
+                                    {property.status === status && <CheckCircle size={14} />}
+                                  </button>
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {getStatusBadge(property.status)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-slate-600 font-medium">{property.category}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-bold text-slate-900">{property.price}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-slate-500 font-medium">{property.date}</span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button 
-                        onClick={() => { setEditingProperty(property); setShowForm(true); }}
-                        className="p-2 text-slate-400 hover:text-primary transition-colors hover:bg-white rounded-lg border border-transparent hover:border-slate-100"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button className="p-2 text-slate-400 hover:text-red-500 transition-colors hover:bg-white rounded-lg border border-transparent hover:border-slate-100">
-                        <Trash2 size={18} />
-                      </button>
-                      <button className="p-2 text-slate-400 hover:text-slate-800 transition-colors">
-                        <MoreVertical size={18} />
-                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center">
+                      <div className="p-4 bg-slate-50 rounded-full mb-3 text-slate-500">
+                        <Search size={32} />
+                      </div>
+                      <p className="font-semibold text-black mb-1">No properties found</p>
+                      <p className="text-base text-slate-500">We couldn't find any properties matching "{searchTerm}"</p>
+                      {searchTerm && (
+                        <button
+                          onClick={() => setSearchTerm('')}
+                          className="mt-4 text-primary font-semibold hover:underline cursor-pointer"
+                        >
+                          Clear search
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
-        
-        {/* Pagination placeholder */}
-        <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-            <p className="text-sm text-slate-500">Showing 1 to {filteredProperties.length} of 1,284 properties</p>
-            <div className="flex items-center space-x-2">
-                <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-400 cursor-not-allowed">Previous</button>
-                <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-all font-semibold">Next</button>
+
+        {/* Pagination */}
+        <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center space-x-6">
+            <p className="text-sm text-black font-medium whitespace-nowrap">
+              Showing <span className="text-primary font-bold">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-primary font-bold">{Math.min(currentPage * itemsPerPage, filteredProperties.length)}</span> of <span className="text-primary font-bold">{filteredProperties.length}</span> properties
+            </p>
+            
+            <div 
+              className="relative flex items-center space-x-2" 
+              ref={perPageRef}
+              onMouseEnter={() => setShowPerPageDropdown(true)}
+              onMouseLeave={() => setShowPerPageDropdown(false)}
+            >
+              <span className="text-xs text-black font-bold uppercase tracking-wider">Per Page:</span>
+              <button 
+                onClick={() => setShowPerPageDropdown(!showPerPageDropdown)}
+                className={`flex items-center justify-between w-18 h-7 bg-white border border-slate-200 rounded-xl px-3 text-sm font-bold transition-all cursor-pointer active:scale-95 ${showPerPageDropdown ? 'border-primary bg-primary/5 text-primary' : 'text-slate-700'}`}
+              >
+                <span>{itemsPerPage}</span>
+                <ChevronDown size={14} className={`transition-transform duration-300 ${showPerPageDropdown ? 'rotate-180' : 'text-slate-500'}`} />
+              </button>
+
+              <AnimatePresence>
+                {showPerPageDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: -8 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                    className="absolute bottom-full left-0 mb-2 w-32 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 z-50 overflow-hidden"
+                  >
+                    {[10, 20, 30, 50, 100].map((val) => (
+                      <button
+                        key={val}
+                        onClick={() => {
+                          setItemsPerPage(val);
+                          setCurrentPage(1);
+                          setShowPerPageDropdown(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm font-bold transition-all cursor-pointer
+                          ${itemsPerPage === val 
+                            ? 'text-primary bg-primary/5' 
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-black'}`}
+                      >
+                        <span>{val} Rows</span>
+                        {itemsPerPage === val && <CheckCircle size={14} className="text-primary" />}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all border shrink-0 
+                ${currentPage === 1 
+                  ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' 
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer shadow-sm active:scale-95'}`}
+            >
+              Previous
+            </button>
+            <div className="hidden sm:flex items-center space-x-1">
+               {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
+                 <button
+                   key={num}
+                   onClick={() => setCurrentPage(num)}
+                   className={`w-9 h-9 rounded-full text-sm font-bold transition-all cursor-pointer
+                     ${currentPage === num 
+                       ? 'bg-primary text-white' 
+                       : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'}`}
+                 >
+                   {num}
+                 </button>
+               ))}
+            </div>
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages || totalPages === 0}
+              className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all border shrink-0
+                ${currentPage === totalPages || totalPages === 0
+                  ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' 
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer active:scale-95'}`}
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
