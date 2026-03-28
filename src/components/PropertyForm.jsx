@@ -1,301 +1,194 @@
 import React, { useState } from 'react';
 import { 
-  Plus, 
-  Trash2, 
-  Upload, 
-  Check, 
-  X, 
-  MapPin, 
-  IndianRupee, 
-  Home, 
-  Image as ImageIcon,
-  Tag,
-  Save,
-  ChevronLeft,
-  ChevronRight
+  Save, 
+  ChevronLeft, 
+  ChevronRight,
+  Info,
+  AlignLeft,
+  Users,
+  IndianRupee,
+  MapPin,
+  Layers,
+  Sparkles,
+  Camera,
+  Map,
+  CheckCircle2,
+  Undo2
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Import sub-components
+import BasicInfo from './property-form/BasicInfo';
+import PropertyDescription from './property-form/PropertyDescription';
+import RentalSuitability from './property-form/RentalSuitability';
+import Pricing from './property-form/Pricing';
+import LocationInfo from './property-form/LocationInfo';
+import PropertyDetails from './property-form/PropertyDetails';
+import AmenitiesFeatures from './property-form/AmenitiesFeatures';
+import ImageUpload from './property-form/ImageUpload';
+import NearbyPlaces from './property-form/NearbyPlaces';
 
 const PropertyForm = ({ initialData, onSave }) => {
   const [activeTab, setActiveTab] = useState('basic');
-  const [formData, setFormData] = useState(initialData || {
-    title: '',
-    description: '',
-    location: '',
-    price: '',
-    category: 'Apartment',
-    purpose: 'Sale', // Sale/Rent
-    status: 'Active',
-    amenities: [],
-    images: [],
-    priceType: 'Fixed',
+  const [formData, setFormData] = useState(() => {
+    const data = initialData || {};
+    return {
+      title: data.title || "",
+      purpose: data.purpose?.toLowerCase() || "sell",
+      propertyType: data.propertyType || data.category?.toLowerCase() || "",
+      configuration: data.configuration || "",
+      configDetails: data.configDetails || "",
+      postedBy: data.postedBy || "owner",
+      description: data.description || "",
+      suitableFor: data.suitableFor || [],
+      availableFrom: data.availableFrom || "",
+      price: data.price || "",
+      priceType: data.priceType?.toLowerCase() || "fixed",
+      pricePerSqft: data.pricePerSqft || "",
+      maintenance: data.maintenance || "",
+      isReraVerified: data.isReraVerified || false,
+      rentPrice: data.rentPrice || "",
+      securityDeposit: data.securityDeposit || "",
+      address: data.address || "",
+      location: data.location || "",
+      area: data.area || "",
+      furnishing: data.furnishing || "",
+      facing: data.facing || "",
+      floor: data.floor || "",
+      totalFloors: data.totalFloors || "",
+      parking: data.parking || "",
+      constructionStatus: data.constructionStatus || "",
+      age: data.age || "",
+      amenities: data.amenities || [],
+      features: data.features || [],
+      gallery: data.gallery || data.images || [],
+      nearbyPlaces: data.nearbyPlaces || [],
+    };
   });
 
-  const tabs = [
-    { id: 'basic', label: 'Basic Info', icon: <Home size={18} /> },
-    { id: 'pricing', label: 'Pricing', icon: <IndianRupee size={18} /> },
-    { id: 'gallery', label: 'Gallery', icon: <ImageIcon size={18} /> },
-    { id: 'amenities', label: 'Amenities', icon: <Tag size={18} /> },
-  ];
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const updateFormData = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleTabChange = (dir) => {
-    const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
-    if (dir === 'next' && currentIndex < tabs.length - 1) {
-      setActiveTab(tabs[currentIndex + 1].id);
-    } else if (dir === 'prev' && currentIndex > 0) {
-      setActiveTab(tabs[currentIndex - 1].id);
+  const sections = [
+    { id: 'basic', label: 'Basic Info', icon: Info, component: BasicInfo },
+    { id: 'description', label: 'Description', icon: AlignLeft, component: PropertyDescription },
+    { id: 'rental', label: 'Rental Preferences', icon: Users, component: RentalSuitability, show: formData.purpose === 'rent' },
+    { id: 'pricing', label: 'Pricing', icon: IndianRupee, component: Pricing },
+    { id: 'location', label: 'Location', icon: MapPin, component: LocationInfo },
+    { id: 'details', label: 'Details', icon: Layers, component: PropertyDetails },
+    { id: 'amenities', label: 'Amenities', icon: Sparkles, component: AmenitiesFeatures },
+    { id: 'gallery', label: 'Gallery', icon: Camera, component: ImageUpload },
+    { id: 'nearby', label: 'Nearby', icon: Map, component: NearbyPlaces },
+  ];
+
+  const visibleSections = sections.filter(s => s.show !== false);
+  const currentIndex = visibleSections.findIndex(s => s.id === activeTab);
+
+  const handleNext = () => {
+    if (currentIndex < visibleSections.length - 1) {
+      setActiveTab(visibleSections[currentIndex + 1].id);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  const renderBasicInfo = () => (
-    <div className="space-y-6 animate-fade-in">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700">Property Title</label>
-          <input 
-            type="text" 
-            name="title"
-            value={formData.title}
-            onChange={handleInputChange}
-            placeholder="Enter property name"
-            className="ag-input"
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700">Location</label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text" 
-              name="location"
-              value={formData.location}
-              onChange={handleInputChange}
-              placeholder="Address / Area"
-              className="ag-input pl-10"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-bold text-slate-700">Property Description</label>
-        <textarea 
-          name="description"
-          value={formData.description}
-          onChange={handleInputChange}
-          rows="5"
-          placeholder="Describe the property highlights, surroundings etc."
-          className="ag-input resize-none"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700">Category</label>
-          <select 
-            name="category"
-            value={formData.category}
-            onChange={handleInputChange}
-            className="ag-input appearance-none"
-          >
-            <option>Apartment</option>
-            <option>Villa</option>
-            <option>Penthouse</option>
-            <option>Flat</option>
-            <option>Plot</option>
-            <option>Commercial</option>
-          </select>
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700">Purpose</label>
-          <div className="flex bg-slate-100 p-1 rounded-xl">
-              <button 
-                onClick={() => setFormData({...formData, purpose: 'Sale'})}
-                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${formData.purpose === 'Sale' ? 'bg-white text-primary shadow-sm' : 'text-slate-400'}`}
-              >
-                  For Sale
-              </button>
-              <button 
-                onClick={() => setFormData({...formData, purpose: 'Rent'})}
-                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${formData.purpose === 'Rent' ? 'bg-white text-primary shadow-sm' : 'text-slate-400'}`}
-              >
-                  For Rent
-              </button>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700">Status</label>
-          <select 
-            name="status"
-            value={formData.status}
-            onChange={handleInputChange}
-            className="ag-input appearance-none"
-          >
-            <option>Active</option>
-            <option>Sold</option>
-            <option>Draft</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderPricing = () => (
-    <div className="space-y-6 animate-fade-in">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700">Expected Price</label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-            <input 
-              type="text" 
-              name="price"
-              value={formData.price}
-              onChange={handleInputChange}
-              placeholder="e.g. 1.2 Cr"
-              className="ag-input pl-8"
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700">Price Type</label>
-          <select 
-            name="priceType"
-            value={formData.priceType}
-            onChange={handleInputChange}
-            className="ag-input appearance-none"
-          >
-            <option>Fixed</option>
-            <option>Negotiable</option>
-            <option>Auction</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderGallery = () => (
-    <div className="space-y-6 animate-fade-in">
-      <div className="border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center bg-slate-50 hover:bg-slate-100/50 transition-all cursor-pointer group">
-        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto text-primary shadow-sm group-hover:scale-110 transition-transform">
-          <Upload size={24} />
-        </div>
-        <h4 className="mt-4 text-lg font-bold text-slate-900">Drag & Drop Property Images</h4>
-        <p className="text-slate-500 text-sm">Or click to browse from your computer</p>
-        <p className="text-[10px] text-slate-400 mt-2 uppercase tracking-widest font-bold">PNG, JPG up to 10MB</p>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {/* Placeholder images */}
-        {[1, 2, 3].map(i => (
-          <div key={i} className="relative aspect-square bg-slate-100 rounded-xl overflow-hidden group">
-            <div className="w-full h-full bg-slate-200 animate-pulse" />
-            <button className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-red-500 hover:text-white rounded-lg text-slate-500 transition-all opacity-0 group-hover:opacity-100 backdrop-blur-sm">
-                <Trash2 size={16} />
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderAmenities = () => {
-    const commonAmenities = ['Parking', 'Swimming Pool', 'Gym', 'Garden', 'Security', 'Clubhouse', 'Power Backup', 'Water Supply', 'Lift', 'Balcony'];
-    return (
-      <div className="space-y-6 animate-fade-in">
-          <h4 className="font-bold text-slate-800">Select Available Features</h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {commonAmenities.map(item => (
-                  <button 
-                      key={item}
-                      onClick={() => {
-                          const newAmenities = formData.amenities.includes(item)
-                              ? formData.amenities.filter(a => a !== item)
-                              : [...formData.amenities, item];
-                          setFormData({...formData, amenities: newAmenities});
-                      }}
-                      className={`
-                          flex items-center p-3 rounded-xl border text-sm font-semibold transition-all
-                          ${formData.amenities.includes(item) 
-                              ? 'bg-primary/5 border-primary text-primary' 
-                              : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}
-                      `}
-                  >
-                      <div className={`w-5 h-5 rounded-lg border flex items-center justify-center mr-3 transition-colors ${formData.amenities.includes(item) ? 'bg-primary border-primary text-white' : 'border-slate-200'}`}>
-                          {formData.amenities.includes(item) && <Check size={12} />}
-                      </div>
-                      {item}
-                  </button>
-              ))}
-          </div>
-      </div>
-    );
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      setActiveTab(visibleSections[currentIndex - 1].id);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
+  const ActiveComponent = visibleSections.find(s => s.id === activeTab)?.component || BasicInfo;
+
   return (
-    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-        {/* Tab Header */}
-        <div className="flex border-b border-slate-50 overflow-x-auto no-scrollbar">
-            {tabs.map(tab => (
-                <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`
-                        flex items-center px-8 py-5 text-sm font-bold border-b-2 transition-all whitespace-nowrap
-                        ${activeTab === tab.id 
-                            ? 'border-primary text-primary bg-primary/5' 
-                            : 'border-transparent text-slate-400 hover:text-slate-600'}
-                    `}
-                >
-                    <span className="mr-2">{tab.icon}</span>
-                    {tab.label}
-                </button>
-            ))}
-        </div>
+    <div className="max-w-6xl mx-auto pb-40">
+      {/* Navigation Header */}
+      <div className="bg-white/70 backdrop-blur-xl border border-zinc-100 rounded-[32px] p-2 mb-8 shadow-sm flex items-center justify-between overflow-x-auto no-scrollbar scroll-smooth">
+        <div className="flex items-center gap-1 p-1">
+          {visibleSections.map((section) => {
+            const Icon = section.icon;
+            const isActive = activeTab === section.id;
+            const isCompleted = visibleSections.indexOf(section) < currentIndex;
 
-        {/* Tab Content */}
-        <div className="p-8 md:p-10 min-h-[400px]">
-            {activeTab === 'basic' && renderBasicInfo()}
-            {activeTab === 'pricing' && renderPricing()}
-            {activeTab === 'gallery' && renderGallery()}
-            {activeTab === 'amenities' && renderAmenities()}
+            return (
+              <button
+                key={section.id}
+                onClick={() => setActiveTab(section.id)}
+                className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[13px] font-black transition-all whitespace-nowrap cursor-pointer
+                  ${isActive 
+                    ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' 
+                    : isCompleted
+                      ? 'text-brand-primary bg-brand-primary/10 hover:bg-brand-primary/20'
+                      : 'text-brand-paragraph hover:text-brand-heading hover:bg-zinc-100'}`}
+              >
+                {isCompleted ? <CheckCircle2 size={16} /> : <Icon size={16} />}
+                {section.label}
+              </button>
+            );
+          })}
         </div>
+      </div>
 
-        {/* Footer Actions */}
-        <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-            <button 
-                onClick={() => handleTabChange('prev')}
-                disabled={activeTab === 'basic'}
-                className="flex items-center px-6 py-2.5 rounded-xl font-bold text-slate-500 hover:text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+      {/* Main Content Area */}
+      <div className="relative min-h-[600px]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.99 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+          >
+            <ActiveComponent 
+              formData={formData} 
+              updateFormData={updateFormData} 
+            />
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Sticky Footer Actions */}
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-50">
+        <div className="bg-white/80 backdrop-blur-2xl border border-zinc-100/50 rounded-[32px] p-4 shadow-2xl flex items-center justify-between gap-4">
+          <button
+            onClick={handlePrev}
+            disabled={currentIndex === 0}
+            className={`flex items-center gap-2 px-8 py-4 rounded-2xl text-[14px] font-black text-brand-paragraph hover:text-brand-heading hover:bg-zinc-100 transition-all cursor-pointer ${currentIndex === 0 ? 'invisible' : 'visible'}`}
+          >
+            <ChevronLeft size={20} />
+            Back
+          </button>
+
+          <div className="flex items-center gap-3">
+            <button
+               onClick={() => window.history.back()}
+               className="hidden md:flex items-center gap-2 px-6 py-4 rounded-2xl text-[14px] font-black text-brand-paragraph hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
             >
-                <ChevronLeft size={20} className="mr-2" />
-                Previous
+              <Undo2 size={18} />
+              Cancel
             </button>
             
-            <div className="flex items-center space-x-3">
-                {activeTab !== 'amenities' ? (
-                    <button 
-                     onClick={() => handleTabChange('next')}
-                     className="ag-button flex items-center !px-8"
-                    >
-                        Continue
-                        <ChevronRight size={20} className="ml-2" />
-                    </button>
-                ) : (
-                    <button 
-                        onClick={() => onSave(formData)}
-                        className="ag-button flex items-center !px-8 !bg-emerald-600 hover:!bg-emerald-700"
-                    >
-                        <Save size={20} className="mr-2" />
-                        List Property
-                    </button>
-                )}
-            </div>
+            {currentIndex < visibleSections.length - 1 ? (
+              <button
+                onClick={handleNext}
+                className="flex items-center gap-3 bg-zinc-900 text-white px-10 py-4 rounded-2xl text-[14px] font-black hover:bg-black transition-all cursor-pointer shadow-xl shadow-zinc-900/10 active:scale-95"
+              >
+                Next Section
+                <ChevronRight size={20} />
+              </button>
+            ) : (
+              <button
+                onClick={() => onSave(formData)}
+                className="flex items-center gap-3 bg-brand-primary text-white px-12 py-4 rounded-2xl text-[14px] font-black hover:bg-brand-primary-dark transition-all cursor-pointer shadow-xl shadow-brand-primary/20 active:scale-95"
+              >
+                <Save size={20} />
+                Publish Property
+              </button>
+            )}
+          </div>
         </div>
+      </div>
     </div>
   );
 };

@@ -9,6 +9,12 @@
   --color-sidebar: #ffffff;
   --color-border: #e2e8f0;
 
+  /* Brand Colors */
+  --color-brand-primary: #baa360;
+  --color-brand-heading: #1e293b;
+  --color-brand-paragraph: #64748b;
+  --color-brand-muted: #94a3b8;
+
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-serif: "Playfair Display", Georgia, serif;
 
@@ -27,8 +33,6 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 }
-
-/* Updated UI Components based on Vimukti Branding & Screenshots */
 
 .ag-card {
   @apply bg-white rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md;
