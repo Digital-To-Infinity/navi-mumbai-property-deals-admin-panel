@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Save,
   ChevronLeft,
@@ -26,7 +26,7 @@ import AmenitiesFeatures from './property-form/AmenitiesFeatures';
 import ImageUpload from './property-form/ImageUpload';
 import NearbyPlaces from './property-form/NearbyPlaces';
 
-const PropertyForm = ({ initialData, onSave }) => {
+const PropertyForm = ({ initialData, onSave, onCancel }) => {
   const [activeTab, setActiveTab] = useState('basic');
   const [formData, setFormData] = useState(() => {
     const data = initialData || {};
@@ -100,9 +100,9 @@ const PropertyForm = ({ initialData, onSave }) => {
   const ActiveComponent = visibleSections.find(s => s.id === activeTab)?.component || BasicInfo;
 
   return (
-    <div className="max-w-6xl mx-auto pb-40">
+    <div className="max-w-6xl mx-auto">
       {/* Navigation Header */}
-      <div className="bg-white/70 backdrop-blur-xl border border-zinc-100 rounded-[32px] p-2 mb-8 shadow-sm flex items-center justify-between overflow-x-auto no-scrollbar scroll-smooth">
+      <div className="bg-white/70 backdrop-blur-xl border border-zinc-100 rounded-[32px] p-2 mb-8 flex items-center justify-between overflow-x-auto no-scrollbar scroll-smooth">
         <div className="flex items-center gap-1 p-1">
           {visibleSections.map((section) => {
             const Icon = section.icon;
@@ -129,7 +129,7 @@ const PropertyForm = ({ initialData, onSave }) => {
       </div>
 
       {/* Main Content Area */}
-      <div className="relative min-h-[600px]">
+      <div className="relative">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -146,46 +146,73 @@ const PropertyForm = ({ initialData, onSave }) => {
         </AnimatePresence>
       </div>
 
-      {/* Sticky Footer Actions */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-50">
-        <div className="bg-white/80 backdrop-blur-2xl border border-zinc-100/50 rounded-[32px] p-4 shadow-2xl flex items-center justify-between gap-4">
-          <button
+      {/* Footer Actions */}
+      <div className="w-full mt-12 px-2">
+        <motion.div
+          className="relative bg-white border border-zinc-100 rounded-[32px] p-2 shadow-sm flex items-center justify-between gap-4 overflow-hidden"
+        >
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handlePrev}
             disabled={currentIndex === 0}
-            className={`flex items-center gap-2 px-8 py-4 rounded-2xl text-[14px] font-black text-brand-paragraph hover:text-brand-heading hover:bg-zinc-100 transition-all cursor-pointer ${currentIndex === 0 ? 'invisible' : 'visible'}`}
+            className={`flex items-center gap-2 md:gap-3 bg-zinc-900 text-white px-5 md:px-8 py-3.5 md:py-4 rounded-2xl text-[13px] md:text-[14px] font-bold hover:bg-black transition-all cursor-pointer shadow-xl shadow-zinc-900/10 disabled:opacity-30 disabled:pointer-events-none`}
           >
-            <ChevronLeft size={20} />
-            Back
-          </button>
+            <ChevronLeft size={18} className="md:w-5 md:h-5" />
+            <span className="hidden min-[500px]:inline">Back Section</span>
+            <span className="min-[500px]:hidden">Back</span>
+          </motion.button>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => window.history.back()}
-              className="hidden md:flex items-center gap-2 px-6 py-4 rounded-2xl text-[14px] font-black text-brand-paragraph hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
+          {/* Step Indicator */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center min-w-[120px] pointer-events-none">
+            <motion.span
+              key={activeTab}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-brand-muted mb-1 flex items-center gap-1.5 md:gap-2"
             >
-              <Undo2 size={18} />
-              Cancel
-            </button>
+              <span className="text-brand-primary">Step {currentIndex + 1}</span>
+              <span className="h-1 w-1 rounded-full bg-zinc-300 hidden sm:block" />
+              <span className="hidden sm:inline text-slate-500">{visibleSections[currentIndex].label}</span>
+            </motion.span>
+            <div className="flex items-center gap-1 md:gap-1.5">
+              {visibleSections.map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`h-1 md:h-1.5 rounded-full transition-all duration-500 ${idx === currentIndex ? 'w-4 md:w-6 bg-brand-primary' : idx < currentIndex ? 'w-1.5 md:w-2 bg-brand-primary/40' : 'w-1 md:w-1.5 bg-zinc-200'}`}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 md:gap-3">
+
 
             {currentIndex < visibleSections.length - 1 ? (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleNext}
-                className="flex items-center gap-3 bg-zinc-900 text-white px-10 py-4 rounded-2xl text-[14px] font-black hover:bg-black transition-all cursor-pointer shadow-xl shadow-zinc-900/10 active:scale-95"
+                className="flex items-center gap-2 md:gap-3 bg-zinc-900 text-white px-5 md:px-8 py-3.5 md:py-4 rounded-2xl text-[13px] md:text-[14px] font-bold hover:bg-black transition-all cursor-pointer shadow-xl shadow-zinc-900/10"
               >
-                Next Section
-                <ChevronRight size={20} />
-              </button>
+                <span className="hidden min-[500px]:inline">Next Section</span>
+                <span className="min-[500px]:hidden">Next</span>
+                <ChevronRight size={18} className="md:w-5 md:h-5" />
+              </motion.button>
             ) : (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => onSave(formData)}
-                className="flex items-center gap-3 bg-brand-primary text-white px-12 py-4 rounded-2xl text-[14px] font-black hover:bg-brand-primary-dark transition-all cursor-pointer shadow-xl shadow-brand-primary/20 active:scale-95"
+                className="flex items-center gap-2 md:gap-3 bg-brand-primary text-white px-6 md:px-10 py-3.5 md:py-4 rounded-2xl text-[13px] md:text-[14px] font-bold hover:bg-brand-primary-dark transition-all cursor-pointer shadow-xl shadow-brand-primary/20"
               >
-                <Save size={20} />
-                Publish Property
-              </button>
+                <Save size={18} className="md:w-5 md:h-5" />
+                <span className="hidden min-[500px]:inline">Publish Property</span>
+                <span className="min-[500px]:hidden">Publish</span>
+              </motion.button>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

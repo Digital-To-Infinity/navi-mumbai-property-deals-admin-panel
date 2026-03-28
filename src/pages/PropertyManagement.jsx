@@ -197,7 +197,11 @@ const PropertyManagement = () => {
             Cancel
           </button>
         </div>
-        <PropertyForm initialData={editingProperty} onSave={handleSave} />
+        <PropertyForm 
+          initialData={editingProperty} 
+          onSave={handleSave} 
+          onCancel={() => { setShowForm(false); setEditingProperty(null); }} 
+        />
       </div>
     )
   }
