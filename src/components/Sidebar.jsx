@@ -45,7 +45,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 overflow-y-auto">
+        <nav className="flex-1 py-4 overflow-y-auto no-scrollbar">
           {menuItems.map((item) => (
             <NavLink
               key={item.name}

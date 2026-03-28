@@ -111,6 +111,16 @@
   @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
 }
 
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 .custom-date-input::-webkit-calendar-picker-indicator {
   @apply opacity-0 absolute inset-0 cursor-pointer;
 }

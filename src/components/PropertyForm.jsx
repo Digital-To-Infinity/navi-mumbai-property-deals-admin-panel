@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  Save, 
-  ChevronLeft, 
+import {
+  Save,
+  ChevronLeft,
   ChevronRight,
   Info,
   AlignLeft,
@@ -16,8 +16,6 @@ import {
   Undo2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-// Import sub-components
 import BasicInfo from './property-form/BasicInfo';
 import PropertyDescription from './property-form/PropertyDescription';
 import RentalSuitability from './property-form/RentalSuitability';
@@ -116,8 +114,8 @@ const PropertyForm = ({ initialData, onSave }) => {
                 key={section.id}
                 onClick={() => setActiveTab(section.id)}
                 className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[13px] font-black transition-all whitespace-nowrap cursor-pointer
-                  ${isActive 
-                    ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' 
+                  ${isActive
+                    ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20'
                     : isCompleted
                       ? 'text-brand-primary bg-brand-primary/10 hover:bg-brand-primary/20'
                       : 'text-brand-paragraph hover:text-brand-heading hover:bg-zinc-100'}`}
@@ -140,9 +138,9 @@ const PropertyForm = ({ initialData, onSave }) => {
             exit={{ opacity: 0, y: -10, scale: 0.99 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
           >
-            <ActiveComponent 
-              formData={formData} 
-              updateFormData={updateFormData} 
+            <ActiveComponent
+              formData={formData}
+              updateFormData={updateFormData}
             />
           </motion.div>
         </AnimatePresence>
@@ -162,13 +160,13 @@ const PropertyForm = ({ initialData, onSave }) => {
 
           <div className="flex items-center gap-3">
             <button
-               onClick={() => window.history.back()}
-               className="hidden md:flex items-center gap-2 px-6 py-4 rounded-2xl text-[14px] font-black text-brand-paragraph hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
+              onClick={() => window.history.back()}
+              className="hidden md:flex items-center gap-2 px-6 py-4 rounded-2xl text-[14px] font-black text-brand-paragraph hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
             >
               <Undo2 size={18} />
               Cancel
             </button>
-            
+
             {currentIndex < visibleSections.length - 1 ? (
               <button
                 onClick={handleNext}

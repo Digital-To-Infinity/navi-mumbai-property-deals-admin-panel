@@ -47,7 +47,7 @@ const BlogManagement = () => {
       </div>
 
       {/* Tabs & Search */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-x-auto">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-x-auto no-scrollbar">
         <div className="flex items-center bg-white p-1 rounded-xl border border-slate-100 w-fit">
           {['all', 'published', 'draft'].map((tab) => (
             <button

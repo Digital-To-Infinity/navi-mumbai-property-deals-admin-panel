@@ -84,7 +84,7 @@ const PropertyManagement = () => {
       </div>
 
       {/* Tabs & Filters */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-x-auto pb-2">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-x-auto no-scrollbar pb-2">
         <div className="flex items-center bg-white p-1 rounded-xl border border-slate-100 w-fit">
           {['all', 'active', 'sold', 'draft'].map((tab) => (
             <button
@@ -119,7 +119,7 @@ const PropertyManagement = () => {
 
       {/* Table */}
       <div className="ag-card overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50/50 border-b border-slate-100">
               <tr>
