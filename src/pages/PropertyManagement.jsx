@@ -52,7 +52,6 @@ const PropertyManagement = () => {
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  // Per-page State
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
@@ -61,6 +60,7 @@ const PropertyManagement = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [isFocused, setIsFocused] = useState(false);
 
   // Restore form state from URL on load
   useEffect(() => {
@@ -137,7 +137,7 @@ const PropertyManagement = () => {
   const handleToggleFeatured = (id) => {
     const property = properties.find(p => p.id === id);
     if (!property) return;
-    
+
     const newState = !property.featured;
     setProperties(prev => prev.map(p => p.id === id ? { ...p, featured: newState } : p));
     toast.success(newState ? 'Marked as Featured' : 'Removed from Featured');
@@ -175,7 +175,7 @@ const PropertyManagement = () => {
       setProperties(prev => [newProperty, ...prev]);
       toast.success('Property published successfully!');
     }
-    setSearchParams({}); // Clear URL params instead of just setting state
+    setSearchParams({});
     setShowForm(false);
     setEditingProperty(null);
   };
@@ -266,8 +266,8 @@ const PropertyManagement = () => {
             onClick={() => { setSearchParams({}); }}
             className={`
               transition-all duration-300 cursor-pointer flex items-center justify-center
-              ${windowWidth <= 426 
-                ? 'absolute -top-4 -right-4 z-[100] w-10 h-10 bg-white border border-slate-200 rounded-full shadow-lg text-slate-500 hover:text-red-500 hover:border-red-100 hover:bg-red-50 active:scale-90 bg-white/80 backdrop-blur-md' 
+              ${windowWidth <= 426
+                ? 'absolute -top-4 -right-4 z-[100] w-10 h-10 bg-white border border-slate-200 rounded-full shadow-lg text-slate-500 hover:text-red-500 hover:border-red-100 hover:bg-red-50 active:scale-90 bg-white/80 backdrop-blur-md'
                 : 'text-slate-500 hover:text-black font-semibold'}
             `}
           >
@@ -324,17 +324,19 @@ const PropertyManagement = () => {
           <div className="relative w-full">
             <motion.div
               initial={false}
-              animate={{ width: windowWidth <= 769 ? '100%' : (searchTerm ? '360px' : '280px') }}
+              animate={{ width: windowWidth <= 769 ? '100%' : ((searchTerm || isFocused) ? '400px' : '280px') }}
               className="relative flex items-center"
             >
               <Search
-                className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200 ${searchTerm ? 'text-primary' : 'text-slate-500'}`}
+                className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200 ${(searchTerm || isFocused) ? 'text-primary' : 'text-slate-500'}`}
                 size={18}
               />
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchTerm}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by title or location..."
                 className="w-full bg-white border border-slate-200 rounded-2xl py-2.5 pl-11 pr-10 text-sm focus:ring-primary focus:border-primary focus:outline-none transition-all placeholder:text-slate-500 hover:border-slate-300"
@@ -400,7 +402,7 @@ const PropertyManagement = () => {
                       <span className="text-sm text-slate-700 font-medium">{property.category}</span>
                     </td>
                     <td className="px-6 max-[426px]:px-2 py-4">
-                      <span className="text-sm font-bold text-black">{property.price}</span>
+                      <span className="text-sm font-semibold text-black">{property.price}</span>
                     </td>
                     <td className="px-6 max-[426px]:px-2 py-4">
                       <span className="text-sm text-slate-600 font-medium">{property.date}</span>

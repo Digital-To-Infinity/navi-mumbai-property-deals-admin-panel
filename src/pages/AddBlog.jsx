@@ -22,7 +22,7 @@ const AddBlog = () => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [status, setStatus] = useState('Published');
-    const [category, setCategory] = useState('Property News');
+    const [category, setCategory] = useState('Market Insights');
     const [tags, setTags] = useState(['Navi Mumbai', 'Real Estate']);
     const [tagInput, setTagInput] = useState('');
 
@@ -130,11 +130,11 @@ const AddBlog = () => {
                                     onChange={(e) => setCategory(e.target.value)}
                                     className="ag-input appearance-none !bg-slate-50/50 border-slate-100"
                                 >
-                                    <option>Property News</option>
-                                    <option>Area Guide</option>
-                                    <option>Investment Tips</option>
+                                    <option>Market Insights</option>
+                                    <option>Buying Guide</option>
+                                    <option>Investment</option>
                                     <option>Lifestyle</option>
-                                    <option>Company Updates</option>
+                                    <option>Real Estate News</option>
                                 </select>
                             </div>
 
