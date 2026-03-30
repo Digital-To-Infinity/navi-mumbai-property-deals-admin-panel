@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import { motion } from "framer-motion";
 import { MapPin, Navigation, Map } from "lucide-react";
 
@@ -8,7 +7,7 @@ const LocationInfo = ({ formData, updateFormData }) => {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white/80 backdrop-blur-xl border border-zinc-100 rounded-[32px] p-8 shadow-sm hover:shadow-md transition-all duration-500"
+            className="bg-white/80 backdrop-blur-xl border border-zinc-100 rounded-[32px] p-8 max-[426px]:p-4 shadow-sm hover:shadow-md transition-all duration-500"
         >
             <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-600">
@@ -30,7 +29,7 @@ const LocationInfo = ({ formData, updateFormData }) => {
                             rows={3}
                             value={formData.address}
                             onChange={(e) => updateFormData("address", e.target.value)}
-                            className="w-full bg-zinc-50/50 border border-brand-muted/50 rounded-2xl px-5 py-4 text-[14px] font-semibold focus:outline-none focus:border-brand-primary focus:bg-white transition-all placeholder:text-[14px] placeholder:text-brand-muted resize-none"
+                            className="w-full bg-zinc-50/50 border border-brand-muted/50 rounded-2xl px-5 pr-14 py-4 text-[14px] font-semibold focus:outline-none focus:border-brand-primary focus:bg-white transition-all placeholder:text-[14px] placeholder:text-brand-muted resize-none"
                         />
                         <div className="absolute right-4 top-4 text-brand-paragraph group-focus-within:text-brand-primary transition-colors">
                            <Navigation className="w-5 h-5" />
@@ -48,7 +47,7 @@ const LocationInfo = ({ formData, updateFormData }) => {
                                 placeholder="e.g. Kharghar"
                                 value={formData.location}
                                 onChange={(e) => updateFormData("location", e.target.value)}
-                                className="w-full bg-zinc-50/50 border border-brand-muted/50 rounded-2xl px-5 py-4 text-[14px] font-semibold focus:outline-none focus:border-brand-primary focus:bg-white transition-all placeholder:text-[14px] placeholder:text-brand-muted"
+                                className="w-full bg-zinc-50/50 border border-brand-muted/50 rounded-2xl px-5 pr-14 py-4 text-[14px] font-semibold focus:outline-none focus:border-brand-primary focus:bg-white transition-all placeholder:text-[14px] placeholder:text-brand-muted"
                             />
                             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-paragraph group-focus-within:text-brand-primary transition-colors">
                                 <Map className="w-5 h-5" />
