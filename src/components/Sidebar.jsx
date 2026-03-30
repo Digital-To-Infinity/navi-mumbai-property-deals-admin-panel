@@ -11,12 +11,15 @@ import {
   X
 } from 'lucide-react';
 
+import { toast } from 'react-hot-toast';
+
 const Sidebar = ({ isOpen, onClose }) => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
+    toast.success('Successfully signed out!');
     navigate('/login');
   };
 

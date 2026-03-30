@@ -40,6 +40,8 @@ const propertiesData = [
   { id: 15, title: 'New Launch in Dronagiri', location: 'Dronagiri, Navi Mumbai', price: '₹40 L', status: 'Active', category: 'Apartment', date: '2026-01-10', featured: true },
 ];
 
+import { toast } from 'react-hot-toast';
+
 const PropertyManagement = () => {
   const [properties, setProperties] = useState(propertiesData);
   const [showForm, setShowForm] = useState(false);
@@ -117,6 +119,7 @@ const PropertyManagement = () => {
 
   const handleStatusChange = (id, newStatus) => {
     setProperties(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
+    toast.success(`Property status updated to ${newStatus}`);
     setOpenDropdownId(null);
   };
 
@@ -128,17 +131,22 @@ const PropertyManagement = () => {
       date: new Date().toISOString().split('T')[0],
     };
     setProperties(prev => [duplicatedProperty, ...prev]);
+    toast.success('Property duplicated successfully!');
     setOpenDropdownId(null);
   };
   const handleToggleFeatured = (id) => {
-    setProperties(prev => prev.map(p => p.id === id ? { ...p, featured: !p.featured } : p));
+    const property = properties.find(p => p.id === id);
+    if (!property) return;
+    
+    const newState = !property.featured;
+    setProperties(prev => prev.map(p => p.id === id ? { ...p, featured: newState } : p));
+    toast.success(newState ? 'Marked as Featured' : 'Removed from Featured');
   };
 
   const handleShare = (id) => {
     const propertyLink = `https://navimumbaipropertydeals.com/property/${id}`;
     navigator.clipboard.writeText(propertyLink).then(() => {
-      // In a real app, I'd use a toast notification here
-      alert(`Listing Link Copied: ${propertyLink}`);
+      toast.success('Listing link copied to clipboard!');
     });
   };
 
@@ -154,6 +162,7 @@ const PropertyManagement = () => {
           }
           : p
       ));
+      toast.success('Property updated successfully!');
     } else {
       const newProperty = {
         ...formData,
@@ -164,6 +173,7 @@ const PropertyManagement = () => {
         price: formData.price || '₹0',
       };
       setProperties(prev => [newProperty, ...prev]);
+      toast.success('Property published successfully!');
     }
     setSearchParams({}); // Clear URL params instead of just setting state
     setShowForm(false);
@@ -171,9 +181,47 @@ const PropertyManagement = () => {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this property?')) {
-      setProperties(prev => prev.filter(p => p.id !== id));
-    }
+    toast((t) => (
+      <div className="flex flex-col gap-4 p-1">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center shrink-0">
+            <Trash2 size={20} />
+          </div>
+          <div>
+            <p className="font-bold text-slate-900">Confirm Delete Property?</p>
+            <p className="text-xs text-slate-500 mt-0.5">This action cannot be undone.</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 mt-1">
+          <button
+            onClick={() => {
+              setProperties(prev => prev.filter(p => p.id !== id));
+              toast.dismiss(t.id);
+              toast.success('Property deleted successfully!');
+            }}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white text-[12px] font-black px-4 py-3 rounded-full transition-all cursor-pointer active:scale-95 uppercase tracking-wider"
+          >
+            Delete
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[12px] font-black px-4 py-3 rounded-full transition-all cursor-pointer active:scale-95 uppercase tracking-wider"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 6000,
+      position: 'top-center',
+      style: {
+        minWidth: '300px',
+        padding: '16px',
+        borderRadius: '24px',
+        background: '#fff',
+        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+      },
+    });
   };
 
   const filteredProperties = properties.filter(prop => {

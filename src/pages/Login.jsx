@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, Eye, EyeOff, ShieldCheck, ChevronRight } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import logo from '../assets/nm-property-logo.png';
 
 const Login = () => {
@@ -13,11 +14,13 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const loadingToast = toast.loading('Authenticating...');
     try {
       await login(email, password);
+      toast.success('Successfully logged in!', { id: loadingToast });
       navigate('/admin-panel');
     } catch (error) {
-      alert("Invalid credentials. Access Denied.");
+      toast.error('Invalid credentials. Access Denied.', { id: loadingToast });
       console.error(error);
     }
   };

@@ -21,12 +21,66 @@ const blogsData = [
   { id: 4, title: 'Navi Mumbai International Airport Updates', category: 'News', status: 'Published', date: '2026-03-19', views: 3420 },
 ];
 
+import { toast } from 'react-hot-toast';
+
 const BlogManagement = () => {
   const [activeTab, setActiveTab] = useState('all');
+  const [blogs, setBlogs] = useState(blogsData);
 
-  const filteredBlogs = blogsData.filter(blog => {
-    if (activeTab === 'all') return true;
-    return blog.status.toLowerCase() === activeTab.toLowerCase();
+  const handleDelete = (id) => {
+    toast((t) => (
+        <div className="flex flex-col gap-4 p-1">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center shrink-0">
+              <Trash2 size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-slate-900">Delete Blog Article?</p>
+              <p className="text-xs text-slate-500 mt-0.5">This action cannot be undone.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <button
+              onClick={() => {
+                setBlogs(prev => prev.filter(b => b.id !== id));
+                toast.dismiss(t.id);
+                toast.success('Article deleted successfully!');
+              }}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white text-[11px] font-black py-2 rounded-lg transition-all cursor-pointer active:scale-95 uppercase tracking-wider"
+            >
+              Confirm Delete
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-black py-2 rounded-lg transition-all cursor-pointer active:scale-95 uppercase tracking-wider"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ), {
+        duration: 6000,
+        position: 'top-center',
+        style: {
+          minWidth: '300px',
+          padding: '16px',
+          borderRadius: '24px',
+          background: '#fff',
+          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+        },
+      });
+  };
+
+  const handleStatusUpdate = (id, newStatus) => {
+    setBlogs(prev => prev.map(blog => 
+        blog.id === id ? { ...blog, status: newStatus } : blog
+    ));
+    toast.success(`Article status updated to ${newStatus}`);
+  };
+
+  const filteredBlogs = blogs.filter(blog => {
+    const matchesTab = activeTab === 'all' || blog.status.toLowerCase() === activeTab.toLowerCase();
+    return matchesTab;
   });
 
   return (
@@ -39,7 +93,7 @@ const BlogManagement = () => {
         </div>
         <NavLink 
             to="/admin-panel/blogs/add"
-            className="ag-button flex items-center justify-center space-x-2 w-full md:w-auto"
+            className="ag-button flex items-center justify-center space-x-2 w-full md:w-auto cursor-pointer"
         >
           <Plus size={20} />
           <span>Write New Post</span>
@@ -54,7 +108,7 @@ const BlogManagement = () => {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`
-                px-6 py-2 rounded-lg text-sm font-semibold capitalize transition-all
+                px-6 py-2 rounded-lg text-sm font-semibold capitalize transition-all cursor-pointer
                 ${activeTab === tab 
                   ? 'bg-primary text-white shadow-sm' 
                   : 'text-slate-500 hover:text-slate-900'}
@@ -70,7 +124,7 @@ const BlogManagement = () => {
           <input 
             type="text" 
             placeholder="Search articles..." 
-            className="bg-white border border-slate-100 rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all w-64"
+            className="bg-white border border-slate-100 rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all w-64 focus:outline-none focus:border-primary"
           />
         </div>
       </div>
@@ -82,9 +136,9 @@ const BlogManagement = () => {
             <div className="flex flex-col h-full">
               <div className="aspect-video bg-slate-100 relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
                   <div className="absolute top-4 left-4 z-10">
-                      <span className={`px-3 py-1 rounded-lg text-xs font-bold border shadow-sm ${
+                      <span className={`px-3 py-1 rounded-lg text-xs font-bold border shadow-sm transition-all cursor-pointer ${
                           blog.status === 'Published' ? 'bg-emerald-500 text-white border-emerald-400' : 'bg-amber-500 text-white border-amber-400'
-                      }`}>
+                      }`} onClick={() => handleStatusUpdate(blog.id, blog.status === 'Published' ? 'Draft' : 'Published')}>
                           {blog.status}
                       </span>
                   </div>
@@ -95,8 +149,8 @@ const BlogManagement = () => {
 
               <div className="p-6 space-y-4">
                 <div className="space-y-1">
-                    <p className="text-xs font-bold text-primary uppercase tracking-wider">{blog.category}</p>
-                    <h4 className="text-lg font-bold text-slate-900 line-clamp-2 leading-tight group-hover:text-primary transition-colors cursor-pointer">{blog.title}</h4>
+                    <p className="text-xs font-bold text-primary uppercase tracking-wider text-left">{blog.category}</p>
+                    <h4 className="text-lg font-bold text-slate-900 line-clamp-2 leading-tight group-hover:text-primary transition-colors cursor-pointer text-left">{blog.title}</h4>
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-slate-50 text-slate-400 text-xs font-bold">
@@ -111,7 +165,10 @@ const BlogManagement = () => {
                         >
                             <Edit size={16} />
                         </NavLink>
-                        <button className="p-2 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors border border-transparent hover:border-red-100">
+                        <button 
+                            onClick={() => handleDelete(blog.id)}
+                            className="p-2 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors border border-transparent hover:border-red-100 cursor-pointer"
+                        >
                             <Trash2 size={16} />
                         </button>
                     </div>

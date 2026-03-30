@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { toast } from 'react-hot-toast';
+
 const AddBlog = () => {
     const navigate = useNavigate();
     const { id } = useParams();
@@ -49,6 +51,7 @@ const AddBlog = () => {
 
     const handleSave = () => {
         console.log({ title, content, status, category, tags });
+        toast.success(id ? 'Article updated successfully!' : 'Article published successfully!');
         navigate('/admin-panel/blogs');
     };
 

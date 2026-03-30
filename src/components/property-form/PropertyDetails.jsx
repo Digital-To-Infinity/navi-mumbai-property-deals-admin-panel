@@ -35,7 +35,7 @@ const PropertyDetails = ({ formData, updateFormData }) => {
                             placeholder="e.g. 1,200"
                             value={formData.area}
                             onChange={(e) => updateFormData("area", e.target.value)}
-                            className="w-full bg-zinc-50/50 border border-brand-muted/50 rounded-2xl pl-14 pr-24 py-4 text-[15px] font-black focus:outline-none focus:border-brand-primary focus:bg-white transition-all placeholder:text-[14px] placeholder:text-brand-muted placeholder:font-semibold"
+                            className="w-full bg-zinc-50/50 border border-brand-muted/50 rounded-2xl pl-14 pr-24 py-4 text-[15px] font-semibold focus:outline-none focus:border-brand-primary focus:bg-white transition-all placeholder:text-[14px] placeholder:text-brand-muted placeholder:font-semibold"
                         />
                         <div className="absolute right-3 py-1.5 px-3 bg-brand-primary/10 rounded-xl text-brand-primary text-[10px] font-black uppercase tracking-wider">
                            SQ.FT

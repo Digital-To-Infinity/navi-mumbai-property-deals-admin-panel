@@ -20,16 +20,26 @@ const inquiriesData = [
   { id: 4, name: 'Priya Joshi', email: 'priya@example.com', phone: '+91 91111 22222', property: 'Plot Kharghar', status: 'Resolved', date: '2026-03-19', message: 'I am interested in buying a plot in Kharghar.' },
 ];
 
+import { toast } from 'react-hot-toast';
+
 const CRMManagement = () => {
   const [activeTab, setActiveTab] = useState('all');
+  const [inquiries, setInquiries] = useState(inquiriesData);
 
-  const filteredInquiries = inquiriesData.filter(inq => {
+  const handleResolve = (id) => {
+    setInquiries(prev => prev.map(inq => 
+      inq.id === id ? { ...inq, status: 'Resolved' } : inq
+    ));
+    toast.success('Inquiry marked as resolved!');
+  };
+
+  const filteredInquiries = inquiries.filter(inq => {
     if (activeTab === 'all') return true;
     return inq.status.toLowerCase() === activeTab.toLowerCase();
   });
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in text-left">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -44,21 +54,21 @@ const CRMManagement = () => {
           <div className="p-3 bg-primary/10 text-primary rounded-xl"><MessageSquare size={24} /></div>
           <div>
             <p className="text-sm font-semibold text-slate-500">Total Inquiries</p>
-            <p className="text-xl font-bold text-slate-900">142</p>
+            <p className="text-xl font-bold text-slate-900">{inquiries.length}</p>
           </div>
         </div>
         <div className="ag-card p-6 flex items-center space-x-4 border-l-4 border-amber-500">
           <div className="p-3 bg-amber-50 text-amber-600 rounded-xl"><Clock size={24} /></div>
           <div>
             <p className="text-sm font-semibold text-slate-500">Pending Follow-up</p>
-            <p className="text-xl font-bold text-slate-900">28</p>
+            <p className="text-xl font-bold text-slate-900">{inquiries.filter(i => i.status === 'Pending').length}</p>
           </div>
         </div>
         <div className="ag-card p-6 flex items-center space-x-4 border-l-4 border-emerald-500">
           <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><CheckCircle2 size={24} /></div>
           <div>
             <p className="text-sm font-semibold text-slate-500">Resolved</p>
-            <p className="text-xl font-bold text-slate-900">114</p>
+            <p className="text-xl font-bold text-slate-900">{inquiries.filter(i => i.status === 'Resolved').length}</p>
           </div>
         </div>
       </div>
@@ -71,7 +81,7 @@ const CRMManagement = () => {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`
-                px-6 py-2 rounded-lg text-sm font-semibold capitalize transition-all
+                px-6 py-2 rounded-lg text-sm font-semibold capitalize transition-all cursor-pointer
                 ${activeTab === tab 
                   ? 'bg-primary text-white shadow-sm' 
                   : 'text-slate-500 hover:text-slate-900'}
@@ -87,7 +97,7 @@ const CRMManagement = () => {
           <input 
             type="text" 
             placeholder="Search leads..." 
-            className="bg-white border border-slate-100 rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all w-64"
+            className="bg-white border border-slate-100 rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all w-64 focus:outline-none focus:border-primary"
           />
         </div>
       </div>
@@ -103,7 +113,7 @@ const CRMManagement = () => {
                     <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500 font-bold">
                         {inquiry.name.charAt(0)}
                     </div>
-                    <div>
+                    <div className="text-left">
                         <h4 className="font-bold text-slate-900">{inquiry.name}</h4>
                         <p className="text-xs text-slate-400">Received on {inquiry.date}</p>
                     </div>
@@ -120,10 +130,10 @@ const CRMManagement = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-3 gap-x-6 text-sm">
                   <div className="flex items-center text-slate-600"><Mail size={16} className="mr-2 text-primary" /> {inquiry.email}</div>
                   <div className="flex items-center text-slate-600"><Phone size={16} className="mr-2 text-primary" /> {inquiry.phone}</div>
-                  <div className="flex items-center text-slate-900 font-semibold"><MapPin size={16} className="mr-2 text-primary" /> Interested in: {inquiry.property}</div>
+                  <div className="flex items-center text-slate-900 font-semibold text-left"><MapPin size={16} className="mr-2 text-primary" /> Interested in: {inquiry.property}</div>
                 </div>
 
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm text-slate-700 leading-relaxed italic">
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm text-slate-700 leading-relaxed italic text-left">
                   "{inquiry.message}"
                 </div>
               </div>
@@ -138,7 +148,10 @@ const CRMManagement = () => {
                 </div>
                 
                 {inquiry.status === 'Pending' && (
-                    <button className="flex items-center bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md active:scale-95">
+                    <button 
+                      onClick={() => handleResolve(inquiry.id)}
+                      className="flex items-center bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+                    >
                         <Check size={18} className="mr-2" />
                         Mark Resolved
                     </button>

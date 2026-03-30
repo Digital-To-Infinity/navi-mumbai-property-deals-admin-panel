@@ -19,19 +19,31 @@ const usersData = [
   { id: 5, name: 'Sneha Pawar', email: 'sneha@example.com', role: 'Agent', status: 'Active', joinDate: '2025-02-28' },
 ];
 
+import { toast } from 'react-hot-toast';
+
 const UserManagement = () => {
   const [activeTab, setActiveTab] = useState('all');
+  const [users, setUsers] = useState(usersData);
 
-  const filteredUsers = usersData.filter(user => {
+  const handleRoleToggle = (id) => {
+    const user = users.find(u => u.id === id);
+    if (!user) return;
+    
+    const nextRole = user.role === 'Admin' ? 'Agent' : user.role === 'Agent' ? 'User' : 'Admin';
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, role: nextRole } : u));
+    toast.success(`${user.name}'s role updated to ${nextRole}`);
+  };
+
+  const filteredUsers = users.filter(user => {
     if (activeTab === 'all') return true;
     return user.role.toLowerCase() === activeTab.toLowerCase();
   });
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in text-left">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
+        <div className="text-left">
           <h1 className="text-2xl font-bold text-slate-900">User Management</h1>
           <p className="text-slate-500">Manage agents, administrators, and regular users.</p>
         </div>
@@ -45,7 +57,7 @@ const UserManagement = () => {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`
-                px-6 py-2 rounded-lg text-sm font-semibold capitalize transition-all
+                px-6 py-2 rounded-lg text-sm font-semibold capitalize transition-all cursor-pointer
                 ${activeTab === tab 
                   ? 'bg-primary text-white shadow-sm' 
                   : 'text-slate-500 hover:text-slate-900'}
@@ -61,7 +73,7 @@ const UserManagement = () => {
           <input 
             type="text" 
             placeholder="Search by name/email..." 
-            className="bg-white border border-slate-100 rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all w-64"
+            className="bg-white border border-slate-100 rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all w-64 focus:outline-none focus:border-primary"
           />
         </div>
       </div>
@@ -84,10 +96,10 @@ const UserManagement = () => {
                 <tr key={user.id} className="hover:bg-slate-50/10 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold">
+                      <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold shrink-0">
                         {user.name.charAt(0)}
                       </div>
-                      <div>
+                      <div className="text-left">
                         <h4 className="font-bold text-slate-900 text-sm leading-tight">{user.name}</h4>
                         <p className="text-xs text-slate-400">{user.email}</p>
                       </div>
@@ -114,10 +126,13 @@ const UserManagement = () => {
                   <td className="px-6 py-4 text-xs font-bold text-slate-500">{user.joinDate}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end space-x-3">
-                        <button className="text-xs font-bold text-primary hover:text-primary-dark transition-colors px-3 py-1.5 hover:bg-primary-light rounded-lg border border-transparent hover:border-primary/10 shadow-none hover:shadow-sm">
+                        <button 
+                          onClick={() => handleRoleToggle(user.id)}
+                          className="text-xs font-bold text-primary hover:text-primary-dark transition-colors px-3 py-1.5 hover:bg-primary-light rounded-lg border border-transparent hover:border-primary/10 shadow-none hover:shadow-sm cursor-pointer"
+                        >
                             Role Toggle
                         </button>
-                        <button className="p-2 text-slate-400 hover:text-slate-800 transition-colors">
+                        <button className="p-2 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer">
                             <MoreVertical size={18} />
                         </button>
                     </div>
