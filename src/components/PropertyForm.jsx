@@ -13,7 +13,6 @@ import {
   Camera,
   Map,
   CheckCircle2,
-  Undo2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import BasicInfo from './property-form/BasicInfo';
@@ -156,7 +155,7 @@ const PropertyForm = ({ initialData, onSave, onCancel }) => {
             whileTap={{ scale: 0.98 }}
             onClick={handlePrev}
             disabled={currentIndex === 0}
-            className={`flex items-center gap-2 md:gap-3 bg-zinc-900 text-white px-5 md:px-8 py-3.5 md:py-4 rounded-2xl text-[13px] md:text-[14px] font-bold hover:bg-black transition-all cursor-pointer shadow-xl shadow-zinc-900/10 disabled:opacity-30 disabled:pointer-events-none`}
+            className={`flex items-center gap-2 md:gap-3 bg-zinc-900 text-white px-5 md:px-8 py-3.5 md:py-4 max-[426px]:py-3 rounded-full text-[13px] md:text-[14px] font-bold hover:bg-black transition-all cursor-pointer shadow-xl shadow-zinc-900/10 disabled:opacity-30 disabled:pointer-events-none`}
           >
             <ChevronLeft size={18} className="md:w-5 md:h-5" />
             <span className="hidden min-[500px]:inline">Back Section</span>
@@ -193,7 +192,7 @@ const PropertyForm = ({ initialData, onSave, onCancel }) => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleNext}
-                className="flex items-center gap-2 md:gap-3 bg-zinc-900 text-white px-5 md:px-8 py-3.5 md:py-4 rounded-2xl text-[13px] md:text-[14px] font-bold hover:bg-black transition-all cursor-pointer shadow-xl shadow-zinc-900/10"
+                className="flex items-center gap-2 md:gap-3 bg-zinc-900 text-white px-5 md:px-8 py-3.5 md:py-4 max-[426px]:py-3 rounded-full text-[13px] md:text-[14px] font-bold hover:bg-black transition-all cursor-pointer shadow-xl shadow-zinc-900/10"
               >
                 <span className="hidden min-[500px]:inline">Next Section</span>
                 <span className="min-[500px]:hidden">Next</span>

@@ -26,7 +26,11 @@ const CustomDropdown = ({ label, options, value, onChange, icon, placeholder }) 
                     {label}
                 </label>
             )}
-            <div className="relative">
+            <div 
+                className="relative"
+                onMouseEnter={() => setIsOpen(true)}
+                onMouseLeave={() => setIsOpen(false)}
+            >
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
@@ -69,13 +73,13 @@ const CustomDropdown = ({ label, options, value, onChange, icon, placeholder }) 
                                                     onChange(option.value);
                                                     setIsOpen(false);
                                                 }}
-                                                className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold transition-all duration-200 group/item ${
+                                                className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold transition-all duration-200 group/item cursor-pointer ${
                                                     isSelected
                                                         ? 'text-brand-primary bg-brand-primary/5'
                                                         : 'text-brand-paragraph hover:bg-zinc-50 hover:text-brand-heading'
                                                 }`}
                                             >
-                                                <div className="flex items-center space-x-3">
+                                                <div className="flex items-center space-x-3 text-base">
                                                     <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                                                         isSelected ? 'bg-brand-primary scale-125' : 'bg-zinc-200 group-hover/item:bg-brand-primary/40'
                                                     }`} />

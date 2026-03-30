@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Info, User, CheckCircle2, Building2, LayoutGrid, Briefcase, Building, Check, Tag, Key } from "lucide-react";
 import CustomDropdown from "./CustomDropdown";
@@ -50,7 +49,7 @@ const BasicInfo = ({ formData, updateFormData }) => {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white/80 backdrop-blur-xl border border-zinc-100 rounded-[32px] p-8 shadow-sm hover:shadow-md transition-all duration-500"
+            className="bg-white/80 backdrop-blur-xl border border-zinc-100 rounded-[32px] p-8 max-[426px]:p-4 shadow-sm hover:shadow-md transition-all duration-500"
         >
             <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">
@@ -141,8 +140,8 @@ const BasicInfo = ({ formData, updateFormData }) => {
                     value={formData.propertyType}
                     onChange={(val) => {
                         updateFormData("propertyType", val);
-                        updateFormData("configuration", ""); // Reset configuration when type changes
-                        updateFormData("configDetails", ""); // Reset details when type changes
+                        updateFormData("configuration", ""); 
+                        updateFormData("configDetails", ""); 
                     }}
                     icon={<Building2 className="w-5 h-5" />}
                 />
@@ -154,7 +153,7 @@ const BasicInfo = ({ formData, updateFormData }) => {
                     value={formData.configuration}
                     onChange={(val) => {
                         updateFormData("configuration", val);
-                        updateFormData("configDetails", ""); // Reset details when config changes
+                        updateFormData("configDetails", ""); 
                     }}
                     icon={<LayoutGrid className="w-5 h-5" />}
                     placeholder={CONFIG_MAPPING[formData.propertyType]?.label}
@@ -179,7 +178,7 @@ const BasicInfo = ({ formData, updateFormData }) => {
                                     placeholder={`e.g. ${CONFIG_MAPPING.residential.options.find(opt => opt.value === formData.configuration)?.label} Details - 3 Bedrooms, 1 Hall, 1 Kitchen, 3 Bathrooms`}
                                     value={formData.configDetails || ""}
                                     onChange={(e) => updateFormData("configDetails", e.target.value)}
-                                    className="w-full bg-zinc-50/50 border border-brand-muted/50 rounded-2xl px-5 py-4 text-[14px] font-semibold focus:outline-none focus:border-brand-primary focus:bg-white transition-all shadow-sm placeholder:text-[14px] placeholder:text-brand-muted"
+                                    className="w-full bg-zinc-50/50 border border-brand-muted/50 rounded-2xl px-5 pr-14 py-4 text-[14px] font-semibold focus:outline-none focus:border-brand-primary focus:bg-white transition-all shadow-sm placeholder:text-[14px] placeholder:text-brand-muted"
                                 />
                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-paragraph group-focus-within:text-brand-primary transition-colors">
                                     <Info className="w-5 h-5" />
@@ -192,7 +191,7 @@ const BasicInfo = ({ formData, updateFormData }) => {
                 {/* Listed By */}
                 <div className="space-y-4 md:col-span-2">
                     <label className="text-[12px] font-black text-brand-paragraph uppercase tracking-widest px-1">Listed By</label>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-3 max-[426px]:grid-cols-1 gap-4">
                         {[
                             { id: "owner", icon: User, label: "Owner" },
                             { id: "agent", icon: Briefcase, label: "Agent" },
@@ -203,7 +202,7 @@ const BasicInfo = ({ formData, updateFormData }) => {
                                 key={id}
                                 type="button"
                                 onClick={() => updateFormData("postedBy", id)}
-                                className={`group relative flex flex-col items-center gap-3 p-5 rounded-[24px] transition-all duration-300 border-2 cursor-pointer
+                                className={`group relative flex flex-col max-[426px]:flex-row items-center gap-3 p-5 max-[426px]:p-4 rounded-[24px] transition-all duration-300 border-2 cursor-pointer
                                     ${formData.postedBy === id 
                                         ? "bg-brand-primary/5 border-brand-primary" 
                                         : "bg-zinc-50/30 border-brand-muted/50 hover:border-brand-primary/30 hover:bg-white"}`}
@@ -223,7 +222,7 @@ const BasicInfo = ({ formData, updateFormData }) => {
                                 {formData.postedBy === id && (
                                     <motion.div
                                         layoutId="active-listed-by"
-                                        className="absolute -top-2 -right-2 w-7 h-7 bg-brand-primary text-white rounded-full flex items-center justify-center shadow-md animate-in zoom-in duration-300 border-2 border-white"
+                                        className="absolute -top-2 -right-2 max-[426px]:top-1/2 max-[426px]:-translate-y-1/2 max-[426px]:right-4 w-7 h-7 bg-brand-primary text-white rounded-full flex items-center justify-center shadow-md animate-in zoom-in duration-300 border-2 border-white"
                                     >
                                         <Check className="w-4 h-4" />
                                     </motion.div>

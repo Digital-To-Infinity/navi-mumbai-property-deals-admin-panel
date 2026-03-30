@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyForm from '../components/PropertyForm';
 import {
@@ -55,7 +56,29 @@ const PropertyManagement = () => {
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const perPageRef = useRef(null);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  // Restore form state from URL on load
+  useEffect(() => {
+    const action = searchParams.get('action');
+    const id = searchParams.get('id');
+
+    if (action === 'add') {
+      setShowForm(true);
+      setEditingProperty(null);
+    } else if (action === 'edit' && id) {
+      const prop = properties.find(p => p.id === parseInt(id));
+      if (prop) {
+        setEditingProperty(prop);
+        setShowForm(true);
+      }
+    } else {
+      setShowForm(false);
+      setEditingProperty(null);
+    }
+  }, [searchParams, properties]);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -142,6 +165,7 @@ const PropertyManagement = () => {
       };
       setProperties(prev => [newProperty, ...prev]);
     }
+    setSearchParams({}); // Clear URL params instead of just setting state
     setShowForm(false);
     setEditingProperty(null);
   };
@@ -184,23 +208,28 @@ const PropertyManagement = () => {
 
   if (showForm) {
     return (
-      <div className="animate-fade-in">
+      <div className="animate-fade-in relative">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">{editingProperty ? 'Edit Property' : 'Add New Property'}</h1>
             <p className="text-slate-500 mt-2">Fill in the details below to list a new property.</p>
           </div>
           <button
-            onClick={() => { setShowForm(false); setEditingProperty(null); }}
-            className="text-slate-500 hover:text-black font-semibold cursor-pointer"
+            onClick={() => { setSearchParams({}); }}
+            className={`
+              transition-all duration-300 cursor-pointer flex items-center justify-center
+              ${windowWidth <= 426 
+                ? 'absolute -top-4 -right-4 z-[100] w-10 h-10 bg-white border border-slate-200 rounded-full shadow-lg text-slate-500 hover:text-red-500 hover:border-red-100 hover:bg-red-50 active:scale-90 bg-white/80 backdrop-blur-md' 
+                : 'text-slate-500 hover:text-black font-semibold'}
+            `}
           >
-            Cancel
+            {windowWidth <= 426 ? <X size={20} strokeWidth={2.5} /> : 'Cancel'}
           </button>
         </div>
-        <PropertyForm 
-          initialData={editingProperty} 
-          onSave={handleSave} 
-          onCancel={() => { setShowForm(false); setEditingProperty(null); }} 
+        <PropertyForm
+          initialData={editingProperty}
+          onSave={handleSave}
+          onCancel={() => { setSearchParams({}); }}
         />
       </div>
     )
@@ -215,7 +244,7 @@ const PropertyManagement = () => {
           <p className="text-slate-500 hidden sm:block">Manage your real estate listings, status, and pricing.</p>
         </div>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => setSearchParams({ action: 'add' })}
           className="ag-button flex items-center justify-center space-x-2 w-full min-[427px]:w-auto cursor-pointer whitespace-nowrap"
         >
           <Plus size={20} />
@@ -331,7 +360,7 @@ const PropertyManagement = () => {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end space-x-2">
                         <button
-                          onClick={() => { setEditingProperty(property); setShowForm(true); }}
+                          onClick={() => { setSearchParams({ action: 'edit', id: property.id.toString() }); }}
                           className="p-2 text-slate-500 hover:text-black transition-colors hover:bg-white rounded-lg border border-transparent hover:border-slate-100 cursor-pointer"
                           title="Edit"
                         >
