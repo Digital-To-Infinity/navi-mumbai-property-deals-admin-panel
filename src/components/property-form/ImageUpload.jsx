@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { ImagePlus, X, Camera, Sparkles, AlertCircle, GripVertical } from "lucide-react";
 
@@ -36,7 +36,7 @@ const ImageUpload = ({ formData, updateFormData }) => {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white/80 backdrop-blur-xl border border-zinc-100 rounded-[32px] p-8 shadow-sm hover:shadow-md transition-all duration-500"
+            className="bg-white/80 backdrop-blur-xl border border-zinc-100 rounded-[32px] p-8 max-[426px]:p-4 shadow-sm hover:shadow-md transition-all duration-500"
         >
             <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">
@@ -128,7 +128,7 @@ const ImageUpload = ({ formData, updateFormData }) => {
                 )}
 
                 {/* Tip */}
-                <div className="flex gap-4 p-6 bg-amber-50 rounded-2xl border border-amber-100 items-start">
+                <div className="flex gap-4 p-6 max-[426px]:p-3 bg-amber-50 rounded-2xl border border-amber-100 items-start">
                     <AlertCircle className="w-6 h-6 text-amber-500 flex-shrink-0" />
                     <p className="text-[13px] text-amber-800 font-medium leading-relaxed">
                         <span className="font-black uppercase tracking-widest text-[11px] block mb-1">Expert Advice:</span>
