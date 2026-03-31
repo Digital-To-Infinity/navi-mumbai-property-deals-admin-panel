@@ -2,7 +2,9 @@ import  { useState } from 'react';
 import Sidebar from './Sidebar';
 import { useAuth } from '../context/AuthContext';
 import { Navigate, Outlet } from 'react-router-dom';
-import { Menu, Search } from 'lucide-react';
+import icon from '../assets/icon.ico';
+import { Menu } from 'lucide-react';
+
 
 const Layout = () => {
     const { user } = useAuth();
@@ -34,8 +36,6 @@ const Layout = () => {
                         >
                             <Menu size={20} />
                         </button>
-
-                        {/* Search Bar Removed */}
                     </div>
 
                     <div className="flex items-center space-x-2 nav:space-x-4">
@@ -45,7 +45,7 @@ const Layout = () => {
                                 <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">Administrator</p>
                             </div>
                             <div className="w-10 h-10 bg-primary-light rounded-xl flex items-center justify-center border border-primary/10 overflow-hidden">
-                                <img src="/nm-property-logo.png" alt="NM" className="w-full h-full object-contain p-1" />
+                                <img src={icon} alt="NM" className="w-full h-full object-contain p-1" />
                             </div>
                         </div>
                     </div>

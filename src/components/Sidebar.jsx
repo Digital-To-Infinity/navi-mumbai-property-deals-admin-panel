@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logo from "../assets/nm-property-logo.png";
+import { toast } from 'react-hot-toast';
 import {
   LayoutDashboard,
   Building2,
@@ -10,8 +11,6 @@ import {
   LogOut,
   X
 } from 'lucide-react';
-
-import { toast } from 'react-hot-toast';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const { logout, user } = useAuth();
@@ -38,7 +37,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     `}>
       {/* Close Button */}
       <button
-        className="absolute top-2 right-2 nav:hidden p-2 bg-white border border-slate-100 text-slate-500 hover:text-red-500 hover:bg-red-50 hover:border-red-100 rounded-full shadow-sm transition-all duration-300 transform hover:rotate-90 active:scale-90 z-50 cursor-pointer"
+        className="absolute top-2 right-2 nav:hidden p-2 max-[426px]:p-1 bg-white border border-slate-100 text-slate-500 hover:text-red-500 hover:bg-red-50 hover:border-red-100 rounded-full shadow-sm transition-all duration-300 transform hover:rotate-90 active:scale-90 z-50 cursor-pointer"
         onClick={onClose}
         aria-label="Close Sidebar"
       >
