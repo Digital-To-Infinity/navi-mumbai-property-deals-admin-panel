@@ -14,7 +14,7 @@ import {
   X,
   Trash2,
   MessageCircle,
-  Copy,
+  Copy
 } from 'lucide-react';
 
 const enquiriesData = [
@@ -31,7 +31,7 @@ const CRMManagement = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [isFocused, setIsFocused] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState(null);
-  const [dropdownPosition, setDropdownPosition] = useState('down'); // 'up' or 'down'
+  const [dropdownPosition, setDropdownPosition] = useState('down');
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
 
@@ -151,21 +151,21 @@ const CRMManagement = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="ag-card p-6 flex items-center space-x-4 border-l-4 border-primary">
+        <div className="ag-card p-6 max-[769px]:p-4 max-[426px]:p-6 flex items-center space-x-4 border-l-4 border-primary">
           <div className="p-3 bg-primary/10 text-primary rounded-xl"><MessageSquare size={24} /></div>
           <div>
             <p className="text-sm font-semibold text-slate-500">Total Enquiries</p>
             <p className="text-xl font-bold text-black">{enquiries.length}</p>
           </div>
         </div>
-        <div className="ag-card p-6 flex items-center space-x-4 border-l-4 border-amber-500">
+        <div className="ag-card p-6 max-[769px]:p-4 max-[426px]:p-6 flex items-center space-x-4 border-l-4 border-amber-500">
           <div className="p-3 bg-amber-50 text-amber-600 rounded-xl"><Clock size={24} /></div>
           <div>
             <p className="text-sm font-semibold text-slate-500">Pending Follow-up</p>
             <p className="text-xl font-bold text-black">{enquiries.filter(i => i.status === 'Pending').length}</p>
           </div>
         </div>
-        <div className="ag-card p-6 flex items-center space-x-4 border-l-4 border-emerald-500">
+        <div className="ag-card p-6 max-[769px]:p-4 max-[426px]:p-6 flex items-center space-x-4 border-l-4 border-emerald-500">
           <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><CheckCircle2 size={24} /></div>
           <div>
             <p className="text-sm font-semibold text-slate-500">Resolved</p>
@@ -236,9 +236,9 @@ const CRMManagement = () => {
       {/* Enquiry List */}
       <div className="grid grid-cols-1 gap-6">
         {filteredEnquiries.map((enquiry) => (
-          <div key={enquiry.id} className="ag-card p-6 hover:border-primary/30 transition-all group">
-            <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-              <div className="flex-1 space-y-4">
+          <div key={enquiry.id} className="ag-card p-6 max-[426px]:p-4 hover:border-primary/30 transition-all group relative">
+            <div className="flex flex-col space-y-6">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 font-bold">
@@ -249,7 +249,7 @@ const CRMManagement = () => {
                       <p className="text-sm text-slate-500">Received on {enquiry.date}</p>
                     </div>
                   </div>
-                  <div className="lg:hidden">
+                  <div>
                     {enquiry.status === 'Resolved' ? (
                       <span className="ag-badge ag-badge-published">Resolved</span>
                     ) : (
@@ -272,24 +272,19 @@ const CRMManagement = () => {
                 </div>
               </div>
 
-              <div className="flex flex-row lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-4 border-t lg:border-t-0 lg:border-l border-slate-50 lg:pl-10 pt-6 lg:pt-0">
-                <div className="hidden lg:block mb-4">
-                  {enquiry.status === 'Resolved' ? (
-                    <span className="ag-badge ag-badge-published !py-1 !px-4">Resolved</span>
-                  ) : (
-                    <span className="ag-badge ag-badge-draft !py-1 !px-4">Pending</span>
+              {/* Action Bar */}
+              <div className="flex flex-row items-center justify-between w-full border-t border-slate-100 pt-6">
+                <div>
+                  {enquiry.status === 'Pending' && (
+                    <button
+                      onClick={() => handleResolve(enquiry.id)}
+                      className="flex items-center bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+                    >
+                      <Check size={18} className="mr-2" />
+                      Mark Resolved
+                    </button>
                   )}
                 </div>
-
-                {enquiry.status === 'Pending' && (
-                  <button
-                    onClick={() => handleResolve(enquiry.id)}
-                    className="flex items-center bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md active:scale-95 cursor-pointer"
-                  >
-                    <Check size={18} className="mr-2" />
-                    Mark Resolved
-                  </button>
-                )}
 
                 <div
                   className="relative"
@@ -297,8 +292,7 @@ const CRMManagement = () => {
                   onMouseEnter={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
                     const availableSpaceBelow = window.innerHeight - rect.bottom;
-                    const dropdownHeight = 300; // Estimated height of the dropdown
-                    
+                    const dropdownHeight = 300;
                     if (availableSpaceBelow < dropdownHeight && rect.top > dropdownHeight) {
                       setDropdownPosition('up');
                     } else {
@@ -313,7 +307,6 @@ const CRMManagement = () => {
                       const rect = e.currentTarget.getBoundingClientRect();
                       const availableSpaceBelow = window.innerHeight - rect.bottom;
                       const dropdownHeight = 300;
-                      
                       if (availableSpaceBelow < dropdownHeight && rect.top > dropdownHeight) {
                         setDropdownPosition('up');
                       } else {
@@ -321,7 +314,7 @@ const CRMManagement = () => {
                       }
                       setOpenDropdownId(openDropdownId === enquiry.id ? null : enquiry.id);
                     }}
-                    className={`p-2.5 transition-colors rounded-full border cursor-pointer ${openDropdownId === enquiry.id ? 'bg-slate-100 text-black border-slate-200' : 'text-slate-400 hover:text-slate-800 bg-white border-slate-200 hover:bg-slate-50'} lg:mt-2`}
+                    className={`p-2.5 transition-colors rounded-full border cursor-pointer ${openDropdownId === enquiry.id ? 'bg-slate-100 text-black border-slate-200' : 'text-slate-500 hover:text-slate-800 bg-white border-slate-200 hover:bg-slate-50'}`}
                   >
                     <MoreVertical size={18} />
                   </button>
