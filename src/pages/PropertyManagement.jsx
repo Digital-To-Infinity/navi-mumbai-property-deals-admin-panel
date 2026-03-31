@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyForm from './AddProperty';
@@ -48,8 +49,11 @@ const PropertyManagement = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [openDropdownId, setOpenDropdownId] = useState(null);
+  const [dropdownPosition, setDropdownPosition] = useState('down');
+  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
+  const hoverTimeoutRef = useRef(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -88,6 +92,14 @@ const PropertyManagement = () => {
   }, []);
 
   useEffect(() => {
+    const handleScroll = () => {
+      setOpenDropdownId(null);
+    };
+    window.addEventListener('scroll', handleScroll, true);
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, []);
+
+  useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
@@ -116,6 +128,28 @@ const PropertyManagement = () => {
     setCurrentPage(1);
   }, [searchTerm, activeTab]);
 
+  const handleMouseEnter = (e, property) => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const availableSpaceBelow = window.innerHeight - rect.bottom;
+    const dropdownHeight = 400; 
+    const side = (availableSpaceBelow < dropdownHeight && rect.top > dropdownHeight) ? 'up' : 'down';
+    
+    setDropdownPosition(side);
+    setDropdownCoords({
+      top: side === 'up' ? rect.top + window.scrollY : rect.bottom + window.scrollY,
+      left: rect.right + window.scrollX
+    });
+    setOpenDropdownId(property.id);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpenDropdownId(null);
+    }, 150);
+  };
+
   const handleStatusChange = (id, newStatus) => {
     setProperties(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
     toast.success(`Property status updated to ${newStatus}`);
@@ -140,6 +174,7 @@ const PropertyManagement = () => {
     const newState = !property.featured;
     setProperties(prev => prev.map(p => p.id === id ? { ...p, featured: newState } : p));
     toast.success(newState ? 'Marked as Featured' : 'Removed from Featured');
+    setOpenDropdownId(null);
   };
 
   const handleShare = (id) => {
@@ -147,6 +182,7 @@ const PropertyManagement = () => {
     navigator.clipboard.writeText(propertyLink).then(() => {
       toast.success('Listing link copied to clipboard!');
     });
+    setOpenDropdownId(null);
   };
 
   const handleSave = (formData) => {
@@ -238,6 +274,8 @@ const PropertyManagement = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = filteredProperties.slice(startIndex, startIndex + itemsPerPage);
 
+  const selectedProperty = currentItems.find(p => p.id === openDropdownId);
+
   const getStatusBadge = (status) => {
     switch (status.toLowerCase()) {
       case 'active':
@@ -283,7 +321,7 @@ const PropertyManagement = () => {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in text-left">
       {/* Header */}
       <div className="flex flex-col min-[427px]:flex-row min-[427px]:items-center justify-between gap-4">
         <div>
@@ -359,7 +397,7 @@ const PropertyManagement = () => {
       </div>
 
       {/* Table */}
-      <div className="ag-card overflow-hidden">
+      <div className="ag-card overflow-visible">
         <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50/50 border-b border-slate-100">
@@ -369,7 +407,7 @@ const PropertyManagement = () => {
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Category</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Price</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Published</th>
-                <th className="px-6 py-4 text-right"></th>
+                <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -422,84 +460,19 @@ const PropertyManagement = () => {
                         >
                           <Trash2 size={18} />
                         </button>
-                        <div
-                          className="relative"
-                          ref={openDropdownId === property.id ? dropdownRef : null}
-                          onMouseEnter={() => setOpenDropdownId(property.id)}
-                          onMouseLeave={() => setOpenDropdownId(null)}
-                        >
+                        <div className="flex items-center justify-end">
                           <button
-                            onClick={() => setOpenDropdownId(openDropdownId === property.id ? null : property.id)}
+                            onMouseEnter={(e) => handleMouseEnter(e, property)}
+                            onMouseLeave={handleMouseLeave}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDropdownId(openDropdownId === property.id ? null : property.id);
+                            }}
                             className={`p-2 transition-colors rounded-lg cursor-pointer ${openDropdownId === property.id ? 'bg-slate-100 text-black' : 'text-slate-400 hover:text-slate-800'}`}
                             title="Action"
                           >
                             <MoreVertical size={18} />
                           </button>
-
-                          <AnimatePresence>
-                            {openDropdownId === property.id && (
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden py-2"
-                              >
-                                <div className="px-4 py-2 border-b border-slate-50 mb-1">
-                                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Quick Actions</p>
-                                </div>
-                                <button className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer">
-                                  <Eye size={16} />
-                                  <span>Preview Listing</span>
-                                </button>
-                                <button
-                                  onClick={() => handleShare(property.id)}
-                                  className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer"
-                                >
-                                  <Share2 size={16} />
-                                  <span>Share Listing</span>
-                                </button>
-                                <button
-                                  onClick={() => handleDuplicate(property)}
-                                  className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer"
-                                >
-                                  <Copy size={16} />
-                                  <span>Duplicate Property</span>
-                                </button>
-                                <button
-                                  onClick={() => handleToggleFeatured(property.id)}
-                                  className={`w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer 
-                                    ${property.featured ? 'text-amber-600 bg-amber-50/50 hover:bg-amber-100' : 'text-slate-600 hover:bg-slate-50 hover:text-black'}`}
-                                >
-                                  <Star size={16} className={property.featured ? 'fill-current' : ''} />
-                                  <span>{property.featured ? 'Remove from Featured' : 'Mark as Featured'}</span>
-                                </button>
-                                <button
-                                  onClick={() => handleStatusChange(property.id, 'Archived')}
-                                  className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
-                                >
-                                  <Archive size={16} />
-                                  <span>Archive Property</span>
-                                </button>
-
-                                <div className="px-4 py-2 border-y border-slate-50 my-1 bg-slate-50/50">
-                                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Change Status</p>
-                                </div>
-                                {['Active', 'Sold', 'Draft'].map((status) => (
-                                  <button
-                                    key={status}
-                                    onClick={() => handleStatusChange(property.id, status)}
-                                    className={`w-full flex items-center justify-between px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer 
-                                      ${property.status === status
-                                        ? 'text-primary font-bold bg-primary/5'
-                                        : 'text-slate-600 hover:bg-slate-50 hover:text-black'}`}
-                                  >
-                                    <span>{status}</span>
-                                    {property.status === status && <CheckCircle size={14} />}
-                                  </button>
-                                ))}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
                         </div>
                       </div>
                     </td>
@@ -529,6 +502,93 @@ const PropertyManagement = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Action Dropdown Portal */}
+        {createPortal(
+          <AnimatePresence>
+            {openDropdownId && selectedProperty && (
+              <div 
+                className="fixed inset-0 z-[9999] pointer-events-none"
+                onClick={() => setOpenDropdownId(null)}
+              >
+                <div className="relative w-full h-full">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: dropdownPosition === 'up' ? 10 : -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: dropdownPosition === 'up' ? 10 : -10 }}
+                    onMouseEnter={() => {
+                        if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+                    }}
+                    onMouseLeave={handleMouseLeave}
+                    ref={dropdownRef}
+                    style={{
+                      position: 'absolute',
+                      top: dropdownPosition === 'up' ? dropdownCoords.top - window.scrollY - 8 : dropdownCoords.top - window.scrollY + 8,
+                      left: dropdownCoords.left - 224, // 224 is w-56
+                      transformOrigin: dropdownPosition === 'up' ? 'bottom right' : 'top right',
+                    }}
+                    className={`pointer-events-auto w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden py-2 text-left ${dropdownPosition === 'up' ? '-translate-y-full' : ''}`}
+                  >
+                    <div className="px-4 py-2 border-b border-slate-50 mb-1">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Quick Actions</p>
+                    </div>
+                    <button className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer text-left">
+                      <Eye size={16} />
+                      <span>Preview Listing</span>
+                    </button>
+                    <button
+                      onClick={() => handleShare(selectedProperty.id)}
+                      className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer text-left"
+                    >
+                      <Share2 size={16} />
+                      <span>Share Listing</span>
+                    </button>
+                    <button
+                      onClick={() => handleDuplicate(selectedProperty)}
+                      className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer text-left"
+                    >
+                      <Copy size={16} />
+                      <span>Duplicate Property</span>
+                    </button>
+                    <button
+                      onClick={() => handleToggleFeatured(selectedProperty.id)}
+                      className={`w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer text-left
+                        ${selectedProperty.featured ? 'text-amber-600 bg-amber-50/50 hover:bg-amber-100' : 'text-slate-600 hover:bg-slate-50 hover:text-black'}`}
+                    >
+                      <Star size={16} className={selectedProperty.featured ? 'fill-current' : ''} />
+                      <span>{selectedProperty.featured ? 'Remove from Featured' : 'Mark as Featured'}</span>
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange(selectedProperty.id, 'Archived')}
+                      className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer text-left"
+                    >
+                      <Archive size={16} />
+                      <span>Archive Property</span>
+                    </button>
+
+                    <div className="px-4 py-2 border-y border-slate-50 my-1 bg-slate-50/50">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Change Status</p>
+                    </div>
+                    {['Active', 'Sold', 'Draft'].map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => handleStatusChange(selectedProperty.id, status)}
+                        className={`w-full flex items-center justify-between px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer text-left
+                          ${selectedProperty.status === status
+                            ? 'text-primary font-bold bg-primary/5'
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-black'}`}
+                      >
+                        <span>{status}</span>
+                        {selectedProperty.status === status && <CheckCircle size={14} />}
+                      </button>
+                    ))}
+                  </motion.div>
+                </div>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
 
         {/* Pagination */}
         <div className="px-6 py-6 bg-slate-50/50 border-t border-slate-100 flex flex-col nav:flex-row items-center justify-between gap-6">

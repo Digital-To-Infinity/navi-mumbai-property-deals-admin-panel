@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import {
@@ -32,13 +33,23 @@ const CRMManagement = () => {
   const [isFocused, setIsFocused] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState('down');
+  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
+  const hoverTimeoutRef = useRef(null);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setOpenDropdownId(null);
+    };
+    window.addEventListener('scroll', handleScroll, true);
+    return () => window.removeEventListener('scroll', handleScroll, true);
   }, []);
 
   useEffect(() => {
@@ -61,6 +72,28 @@ const CRMManagement = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleMouseEnter = (e, id) => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const availableSpaceBelow = window.innerHeight - rect.bottom;
+    const dropdownHeight = 350; 
+    const side = (availableSpaceBelow < dropdownHeight && rect.top > dropdownHeight) ? 'up' : 'down';
+    
+    setDropdownPosition(side);
+    setDropdownCoords({
+      top: side === 'up' ? rect.top + window.scrollY : rect.bottom + window.scrollY,
+      left: rect.right + window.scrollX
+    });
+    setOpenDropdownId(id);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpenDropdownId(null);
+    }, 150);
+  };
 
   const handleResolve = (id) => {
     setEnquiries(prev => prev.map(inq =>
@@ -138,6 +171,8 @@ const CRMManagement = () => {
 
     return matchesTab && matchesSearch;
   });
+
+  const selectedEnquiry = enquiries.find(e => e.id === openDropdownId);
 
   return (
     <div className="space-y-8 animate-fade-in text-left">
@@ -286,113 +321,115 @@ const CRMManagement = () => {
                   )}
                 </div>
 
-                <div
-                  className="relative"
-                  ref={openDropdownId === enquiry.id ? dropdownRef : null}
-                  onMouseEnter={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const availableSpaceBelow = window.innerHeight - rect.bottom;
-                    const dropdownHeight = 300;
-                    if (availableSpaceBelow < dropdownHeight && rect.top > dropdownHeight) {
-                      setDropdownPosition('up');
-                    } else {
-                      setDropdownPosition('down');
-                    }
-                    setOpenDropdownId(enquiry.id);
-                  }}
-                  onMouseLeave={() => setOpenDropdownId(null)}
-                >
+                <div className="relative">
                   <button
+                    onMouseEnter={(e) => handleMouseEnter(e, enquiry.id)}
+                    onMouseLeave={handleMouseLeave}
                     onClick={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const availableSpaceBelow = window.innerHeight - rect.bottom;
-                      const dropdownHeight = 300;
-                      if (availableSpaceBelow < dropdownHeight && rect.top > dropdownHeight) {
-                        setDropdownPosition('up');
-                      } else {
-                        setDropdownPosition('down');
-                      }
+                      e.stopPropagation();
                       setOpenDropdownId(openDropdownId === enquiry.id ? null : enquiry.id);
                     }}
                     className={`p-2.5 transition-colors rounded-full border cursor-pointer ${openDropdownId === enquiry.id ? 'bg-slate-100 text-black border-slate-200' : 'text-slate-500 hover:text-slate-800 bg-white border-slate-200 hover:bg-slate-50'}`}
                   >
                     <MoreVertical size={18} />
                   </button>
-
-                  <AnimatePresence>
-                    {openDropdownId === enquiry.id && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: dropdownPosition === 'up' ? -10 : 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: dropdownPosition === 'up' ? -10 : 10 }}
-                        className={`absolute right-0 ${dropdownPosition === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'} w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden py-2`}
-                      >
-                        <div className="px-4 py-2 border-b border-slate-50 mb-1">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Lead Actions</p>
-                        </div>
-                        <a
-                          href={`tel:${enquiry.phone}`}
-                          className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer"
-                        >
-                          <Phone size={16} />
-                          <span>Call Lead</span>
-                        </a>
-                        <a
-                          href={`mailto:${enquiry.email}`}
-                          className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer"
-                        >
-                          <Mail size={16} />
-                          <span>Email Lead</span>
-                        </a>
-                        <a
-                          href={`https://wa.me/${enquiry.phone.replace(/[^0-9]/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer"
-                        >
-                          <MessageCircle size={16} />
-                          <span>WhatsApp</span>
-                        </a>
-                        <button
-                          onClick={() => handleCopyDetails(enquiry)}
-                          className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer"
-                        >
-                          <Copy size={16} />
-                          <span>Copy Details</span>
-                        </button>
-                        <button
-                          onClick={() => handleDelete(enquiry.id)}
-                          className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
-                        >
-                          <Trash2 size={16} />
-                          <span>Delete Lead</span>
-                        </button>
-
-                        <div className="px-4 py-2 border-y border-slate-50 my-1 bg-slate-50/50">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Update Status</p>
-                        </div>
-                        {['Pending', 'Resolved'].map((status) => (
-                          <button
-                            key={status}
-                            onClick={() => handleStatusUpdate(enquiry.id, status)}
-                            className={`w-full flex items-center justify-between px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer 
-                              ${enquiry.status === status
-                                ? 'text-primary font-bold bg-primary/5'
-                                : 'text-slate-600 hover:bg-slate-50 hover:text-black'}`}
-                          >
-                            <span>{status}</span>
-                            {enquiry.status === status && <CheckCircle2 size={14} />}
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </div>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Action Dropdown Portal */}
+      {createPortal(
+        <AnimatePresence>
+          {openDropdownId && selectedEnquiry && (
+            <div 
+              className="fixed inset-0 z-[9999] pointer-events-none"
+              onClick={() => setOpenDropdownId(null)}
+            >
+              <div className="relative w-full h-full">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: dropdownPosition === 'up' ? 10 : -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: dropdownPosition === 'up' ? 10 : -10 }}
+                  onMouseEnter={() => {
+                        if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+                    }}
+                  onMouseLeave={handleMouseLeave}
+                  ref={dropdownRef}
+                  style={{
+                    position: 'absolute',
+                    top: dropdownPosition === 'up' ? dropdownCoords.top - window.scrollY - 8 : dropdownCoords.top - window.scrollY + 8,
+                    left: dropdownCoords.left - 224, // 224 is w-56
+                    transformOrigin: dropdownPosition === 'up' ? 'bottom right' : 'top right',
+                  }}
+                  className={`pointer-events-auto w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden py-2 text-left ${dropdownPosition === 'up' ? '-translate-y-full' : ''}`}
+                >
+                  <div className="px-4 py-2 border-b border-slate-50 mb-1">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Lead Actions</p>
+                  </div>
+                  <a
+                    href={`tel:${selectedEnquiry.phone}`}
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer"
+                  >
+                    <Phone size={16} />
+                    <span>Call Lead</span>
+                  </a>
+                  <a
+                    href={`mailto:${selectedEnquiry.email}`}
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer"
+                  >
+                    <Mail size={16} />
+                    <span>Email Lead</span>
+                  </a>
+                  <a
+                    href={`https://wa.me/${selectedEnquiry.phone.replace(/[^0-9]/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer"
+                  >
+                    <MessageCircle size={16} />
+                    <span>WhatsApp</span>
+                  </a>
+                  <button
+                    onClick={() => handleCopyDetails(selectedEnquiry)}
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer"
+                  >
+                    <Copy size={16} />
+                    <span>Copy Details</span>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(selectedEnquiry.id)}
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+                  >
+                    <Trash2 size={16} />
+                    <span>Delete Lead</span>
+                  </button>
+
+                  <div className="px-4 py-2 border-y border-slate-50 my-1 bg-slate-50/50">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Update Status</p>
+                  </div>
+                  {['Pending', 'Resolved'].map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => handleStatusUpdate(selectedEnquiry.id, status)}
+                      className={`w-full flex items-center justify-between px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer 
+                        ${selectedEnquiry.status === status
+                          ? 'text-primary font-bold bg-primary/5'
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-black'}`}
+                    >
+                      <span>{status}</span>
+                      {selectedEnquiry.status === status && <CheckCircle2 size={14} />}
+                    </button>
+                  ))}
+                </motion.div>
+              </div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };

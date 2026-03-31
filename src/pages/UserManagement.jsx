@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import {
@@ -12,7 +13,8 @@ import {
   UserMinus,
   CheckCircle,
   Trash2,
-  ChevronDown
+  ChevronDown,
+  Key
 } from 'lucide-react';
 
 const usersData = [
@@ -39,10 +41,12 @@ const UserManagement = () => {
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState('down');
+  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0 });
   
   const searchInputRef = useRef(null);
   const dropdownRef = useRef(null);
   const perPageRef = useRef(null);
+  const hoverTimeoutRef = useRef(null);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -100,6 +104,18 @@ const UserManagement = () => {
     });
   };
 
+  const handleResetPassword = (name) => {
+    toast.promise(
+      new Promise((resolve) => setTimeout(resolve, 1500)),
+      {
+        loading: `Generating reset link for ${name}...`,
+        success: `Reset link sent to ${name}'s email!`,
+        error: 'Failed to send reset link.',
+      }
+    );
+    setOpenDropdownId(null);
+  };
+
   const handleDelete = (id, name) => {
     toast((t) => (
       <div className="flex flex-col gap-4 p-1">
@@ -145,6 +161,36 @@ const UserManagement = () => {
     setOpenDropdownId(null);
   };
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setOpenDropdownId(null);
+    };
+    window.addEventListener('scroll', handleScroll, true);
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, []);
+
+  const handleMouseEnter = (e, user) => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const availableSpaceBelow = window.innerHeight - rect.bottom;
+    const dropdownHeight = 450; 
+    const side = (availableSpaceBelow < dropdownHeight && rect.top > dropdownHeight) ? 'up' : 'down';
+    
+    setDropdownPosition(side);
+    setDropdownCoords({
+      top: side === 'up' ? rect.top + window.scrollY : rect.bottom + window.scrollY,
+      left: rect.right + window.scrollX
+    });
+    setOpenDropdownId(user.id);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpenDropdownId(null);
+    }, 150);
+  };
+
   const filteredUsers = users.filter(user => {
     const matchesTab = activeTab === 'all' || user.role.toLowerCase() === activeTab.toLowerCase();
     const matchesSearch =
@@ -159,6 +205,8 @@ const UserManagement = () => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  const selectedUser = paginatedUsers.find(u => u.id === openDropdownId);
 
   return (
     <div className="space-y-8 animate-fade-in text-left">
@@ -239,7 +287,7 @@ const UserManagement = () => {
                 <th className="px-6 py-4 w-[160px]">Role</th>
                 <th className="px-6 py-4 w-[140px]">Status</th>
                 <th className="px-6 py-4 w-[160px]">Registration</th>
-                <th className="px-6 py-4 text-right w-[100px]">Actions</th>
+                <th className="px-6 py-4 text-right w-[120px]">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -276,105 +324,33 @@ const UserManagement = () => {
                     </td>
                     <td className="px-6 py-4 text-xs font-bold text-slate-500">{user.joinDate}</td>
                     <td className="px-6 py-4 text-right">
-                      <div className="relative flex items-center justify-end">
-                        <div
-                          className="relative"
-                          ref={openDropdownId === user.id ? dropdownRef : null}
-                          onMouseEnter={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const availableSpaceBelow = window.innerHeight - rect.bottom;
-                            const dropdownHeight = 350;
-                            if (availableSpaceBelow < dropdownHeight && rect.top > dropdownHeight) {
-                              setDropdownPosition('up');
-                            } else {
-                              setDropdownPosition('down');
-                            }
-                            setOpenDropdownId(user.id);
-                          }}
-                          onMouseLeave={() => setOpenDropdownId(null)}
+                      <div className="flex items-center justify-end space-x-1">
+                        <button
+                          className="p-2 text-slate-500 hover:text-black transition-colors hover:bg-white rounded-lg border border-transparent hover:border-slate-100 cursor-pointer"
+                          title="Edit User"
                         >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user.id, user.name)}
+                          className="p-2 text-slate-500 hover:text-red-500 transition-colors hover:bg-white rounded-lg border border-transparent hover:border-slate-100 cursor-pointer"
+                          title="Delete User"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                        <div className="flex items-center justify-end">
                           <button
+                            onMouseEnter={(e) => handleMouseEnter(e, user)}
+                            onMouseLeave={handleMouseLeave}
                             onClick={(e) => {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const availableSpaceBelow = window.innerHeight - rect.bottom;
-                              const dropdownHeight = 350;
-                              if (availableSpaceBelow < dropdownHeight && rect.top > dropdownHeight) {
-                                setDropdownPosition('up');
-                              } else {
-                                setDropdownPosition('down');
-                              }
+                              e.stopPropagation();
                               setOpenDropdownId(openDropdownId === user.id ? null : user.id);
                             }}
-                            className={`p-2 transition-colors rounded-lg cursor-pointer ${openDropdownId === user.id ? 'bg-slate-100 text-black' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-50'}`}
+                            className={`p-2 transition-colors rounded-lg cursor-pointer ${openDropdownId === user.id ? 'bg-slate-100 text-black' : 'text-slate-400 hover:text-slate-800'}`}
                             title="Actions"
                           >
-                            < MoreVertical size={18} />
+                            <MoreVertical size={18} />
                           </button>
-
-                          <AnimatePresence>
-                            {openDropdownId === user.id && (
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0.95, y: dropdownPosition === 'up' ? -10 : 10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95, y: dropdownPosition === 'up' ? -10 : 10 }}
-                                className={`absolute right-0 ${dropdownPosition === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'} w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 z-[70] overflow-hidden py-2 text-left`}
-                              >
-                                <div className="px-4 py-2 border-b border-slate-50 mb-1">
-                                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Quick Actions</p>
-                                </div>
-
-                                <button className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer text-left">
-                                  <Edit size={16} />
-                                  <span>Edit Profile</span>
-                                </button>
-
-                                <button
-                                  onClick={() => handleCopyEmail(user.email)}
-                                  className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer text-left"
-                                >
-                                  <Mail size={16} />
-                                  <span>Copy Email address</span>
-                                </button>
-
-                                <button
-                                  onClick={() => handleStatusToggle(user.id)}
-                                  className={`w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer text-left
-                                    ${user.status === 'Active' ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
-                                >
-                                  {user.status === 'Active' ? <UserMinus size={16} /> : <CheckCircle size={16} />}
-                                  <span>{user.status === 'Active' ? 'Deactivate Account' : 'Activate Account'}</span>
-                                </button>
-
-                                <div className="px-4 py-2 border-y border-slate-50 my-1 bg-slate-50/50">
-                                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Change Role</p>
-                                </div>
-
-                                {['Admin', 'Agent', 'User'].map((role) => (
-                                  <button
-                                    key={role}
-                                    onClick={() => handleRoleChange(user.id, role)}
-                                    className={`w-full flex items-center justify-between px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer text-left
-                                      ${user.role === role
-                                        ? 'text-primary font-bold bg-primary/5'
-                                        : 'text-slate-600 hover:bg-slate-50 hover:text-black'}`}
-                                  >
-                                    <span>{role}</span>
-                                    {user.role === role && <CheckCircle size={14} />}
-                                  </button>
-                                ))}
-
-                                <div className="border-t border-slate-50 mt-1 pt-1">
-                                  <button
-                                    onClick={() => handleDelete(user.id, user.name)}
-                                    className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer text-left"
-                                  >
-                                    <Trash2 size={16} />
-                                    <span>Delete User</span>
-                                  </button>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
                         </div>
                       </div>
                     </td>
@@ -404,6 +380,86 @@ const UserManagement = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Action Dropdown Portal */}
+        {createPortal(
+          <AnimatePresence>
+            {openDropdownId && selectedUser && (
+              <div 
+                className="fixed inset-0 z-[9999] pointer-events-none"
+                onClick={() => setOpenDropdownId(null)}
+              >
+                <div className="relative w-full h-full">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: dropdownPosition === 'up' ? 10 : -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: dropdownPosition === 'up' ? 10 : -10 }}
+                    onMouseEnter={() => {
+                        if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+                    }}
+                    onMouseLeave={handleMouseLeave}
+                    ref={dropdownRef}
+                    style={{
+                      position: 'absolute',
+                      top: dropdownPosition === 'up' ? dropdownCoords.top - window.scrollY - 8 : dropdownCoords.top - window.scrollY + 8,
+                      left: dropdownCoords.left - 224, // 224 is w-56
+                      transformOrigin: dropdownPosition === 'up' ? 'bottom right' : 'top right',
+                    }}
+                    className={`pointer-events-auto w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden py-2 text-left ${dropdownPosition === 'up' ? '-translate-y-full' : ''}`}
+                  >
+                    <div className="px-4 py-2 border-b border-slate-50 mb-1">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Management</p>
+                    </div>
+
+                    <button
+                      onClick={() => handleResetPassword(selectedUser.name)}
+                      className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer text-left"
+                    >
+                      <Key size={16} />
+                      <span>Reset Password</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleCopyEmail(selectedUser.email)}
+                      className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer text-left"
+                    >
+                      <Mail size={16} />
+                      <span>Copy Email address</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleStatusToggle(selectedUser.id)}
+                      className={`w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer text-left
+                        ${selectedUser.status === 'Active' ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                    >
+                      {selectedUser.status === 'Active' ? <UserMinus size={16} /> : <CheckCircle size={16} />}
+                      <span>{selectedUser.status === 'Active' ? 'Deactivate Account' : 'Activate Account'}</span>
+                    </button>
+
+                    <div className="px-4 py-2 border-y border-slate-50 my-1 bg-slate-50/50">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Change Role</p>
+                    </div>
+
+                    {['Admin', 'Agent', 'User'].map((role) => (
+                      <button
+                        key={role}
+                        onClick={() => handleRoleChange(selectedUser.id, role)}
+                        className={`w-full flex items-center justify-between px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer text-left
+                          ${selectedUser.role === role
+                            ? 'text-primary font-bold bg-primary/5'
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-black'}`}
+                      >
+                        <span>{role}</span>
+                        {selectedUser.role === role && <CheckCircle size={14} />}
+                      </button>
+                    ))}
+                  </motion.div>
+                </div>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
 
         {/* Pagination */}
         <div className="px-6 py-6 bg-slate-50/50 border-t border-slate-100 flex flex-col nav:flex-row items-center justify-between gap-6">
