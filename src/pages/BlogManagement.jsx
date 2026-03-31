@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
+import { NavLink } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-hot-toast';
 import {
   Plus,
   Search,
@@ -16,9 +19,6 @@ import {
   Archive,
   Star
 } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'react-hot-toast';
 
 const blogsData = [
   { id: 1, title: 'Upcoming Infrastructure Projects in Navi Mumbai', category: 'Market Insights', status: 'Published', date: '2026-03-22', views: 1240, featured: true },

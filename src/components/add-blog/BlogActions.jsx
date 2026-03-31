@@ -2,7 +2,7 @@ import { CheckCircle2 } from 'lucide-react';
 
 const BlogActions = ({ handleSave, isFormValid }) => {
     return (
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 border-t border-slate-100">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
             <button
                 onClick={() => handleSave('Draft')}
                 disabled={!isFormValid}

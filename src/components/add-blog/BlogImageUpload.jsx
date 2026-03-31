@@ -36,7 +36,7 @@ const BlogImageUpload = ({ images, onChange }) => {
         <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white/80 backdrop-blur-xl border border-zinc-100 rounded-[32px] p-8 max-[426px]:p-4 shadow-sm hover:shadow-md transition-all duration-500"
+            className="bg-white/80 backdrop-blur-xl border border-zinc-100 rounded-[32px] p-6 md:p-8 max-[426px]:p-4 shadow-sm hover:shadow-md transition-all duration-500"
         >
             <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">

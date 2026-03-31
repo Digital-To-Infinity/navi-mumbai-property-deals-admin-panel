@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import BlogHeader from '../components/add-blog/BlogHeader';
 import BlogEditor from '../components/add-blog/BlogEditor';
@@ -21,10 +21,7 @@ const categoryOptions = [
 const AddBlog = () => {
     const navigate = useNavigate();
     const { id } = useParams();
-    const [searchParams, setSearchParams] = useSearchParams();
-
     const [title, setTitle] = useState('');
-    const [slug, setSlug] = useState('');
     const [content, setContent] = useState('');
     const [status, setStatus] = useState('Published');
     const [category, setCategory] = useState('');
@@ -88,7 +85,7 @@ const AddBlog = () => {
         const newBlog = {
             id: id ? parseInt(id) : Date.now(),
             title: title || 'Untitled Article',
-            slug: slug || title.toLowerCase().replace(/\s+/g, '-'),
+            slug: title.toLowerCase().replace(/\s+/g, '-'),
             content,
             status: finalStatus,
             category: category || 'Market Insights',

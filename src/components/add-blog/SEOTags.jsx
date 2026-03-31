@@ -2,7 +2,7 @@ import { Tag, Plus, X } from 'lucide-react';
 
 const SEOTags = ({ tags, tagInput, setTagInput, handleAddTag, removeTag }) => {
     return (
-        <div className="ag-card p-6 md:p-8 space-y-6 shadow-sm border-slate-100/50">
+        <div className="ag-card p-6 md:p-8 max-[426px]:p-4 space-y-6 shadow-sm border-slate-100/50">
             <h4 className="font-bold text-slate-900 flex items-center"><Tag size={18} className="mr-2 text-primary" /> SEO Labels & Tags</h4>
 
             <div className="space-y-6">
