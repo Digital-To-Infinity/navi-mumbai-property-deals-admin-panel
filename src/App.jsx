@@ -9,6 +9,7 @@ import BlogManagement from './pages/BlogManagement';
 import AddBlog from './pages/AddBlog';
 import CRMManagement from './pages/CRMManagement';
 import UserManagement from './pages/UserManagement';
+import ReviewManagement from './pages/ReviewManagement';
 
 function App() {
   return (
@@ -50,10 +51,13 @@ function App() {
               <Route path="blogs/edit/:id" element={<AddBlog />} />
               
               {/* CRM / Inquiries */}
-              <Route path="inquiries" element={<CRMManagement />} />
+              <Route path="enquiries" element={<CRMManagement />} />
               
               {/* User Management */}
               <Route path="users" element={<UserManagement />} />
+              
+              {/* Review Management */}
+              <Route path="reviews" element={<ReviewManagement />} />
             </Route>
 
             {/* Catch-all and Redirects */}

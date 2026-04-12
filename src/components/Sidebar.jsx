@@ -9,7 +9,9 @@ import {
   Users,
   MessageSquare,
   LogOut,
-  X
+  X,
+  MessageSquareCode,
+  Star
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -26,8 +28,9 @@ const Sidebar = ({ isOpen, onClose }) => {
     { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/admin-panel' },
     { name: 'Properties', icon: <Building2 size={20} />, path: '/admin-panel/properties' },
     { name: 'Blog Posts', icon: <FileText size={20} />, path: '/admin-panel/blogs' },
-    { name: 'Contact Enquiries', icon: <MessageSquare size={20} />, path: '/admin-panel/inquiries' },
+    { name: 'Contact Enquiries', icon: <MessageSquareCode size={20} />, path: '/admin-panel/enquiries' },
     { name: 'User Management', icon: <Users size={20} />, path: '/admin-panel/users' },
+    { name: 'Reviews', icon: <Star size={20} />, path: '/admin-panel/reviews' },
   ];
 
   return (
