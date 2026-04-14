@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://navimumbaipropertydeals/api',
+  baseURL: 'https://api.navimumbaipropertydeals.com/api',
   headers: {
     'Content-Type': 'application/json',
   },

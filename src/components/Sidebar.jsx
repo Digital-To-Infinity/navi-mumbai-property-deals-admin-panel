@@ -25,12 +25,12 @@ const Sidebar = ({ isOpen, onClose }) => {
   };
 
   const menuItems = [
-    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/admin-panel' },
-    { name: 'Properties', icon: <Building2 size={20} />, path: '/admin-panel/properties' },
-    { name: 'Blog Posts', icon: <FileText size={20} />, path: '/admin-panel/blogs' },
-    { name: 'Contact Enquiries', icon: <MessageSquareCode size={20} />, path: '/admin-panel/enquiries' },
-    { name: 'User Management', icon: <Users size={20} />, path: '/admin-panel/users' },
-    { name: 'Reviews', icon: <Star size={20} />, path: '/admin-panel/reviews' },
+    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/' },
+    { name: 'Properties', icon: <Building2 size={20} />, path: '/properties' },
+    { name: 'Blog Posts', icon: <FileText size={20} />, path: '/blogs' },
+    { name: 'Contact Enquiries', icon: <MessageSquareCode size={20} />, path: '/enquiries' },
+    { name: 'User Management', icon: <Users size={20} />, path: '/users' },
+    { name: 'Reviews', icon: <Star size={20} />, path: '/reviews' },
   ];
 
   return (
@@ -59,7 +59,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             <NavLink
               key={item.name}
               to={item.path}
-              end={item.path === '/admin-panel'}
+              end={item.path === '/'}
               onClick={() => {
                 if (window.innerWidth < 770) onClose();
               }}

@@ -18,7 +18,7 @@ const Login = () => {
     try {
       await login(email, password);
       toast.success('Successfully logged in!', { id: loadingToast });
-      navigate('/admin-panel');
+      navigate('/');
     } catch (error) {
       toast.error('Invalid credentials. Access Denied.', { id: loadingToast });
       console.error(error);

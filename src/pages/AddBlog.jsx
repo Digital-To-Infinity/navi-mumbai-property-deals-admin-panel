@@ -110,14 +110,14 @@ const AddBlog = () => {
         localStorage.setItem('custom_blogs', JSON.stringify(updatedBlogs));
 
         toast.success(id ? 'Article updated successfully!' : `Article ${finalStatus === 'Published' ? 'published' : 'saved as draft'} successfully!`);
-        navigate('/admin-panel/blogs');
+        navigate('/blogs');
     };
 
     return (
         <div className="space-y-8 animate-fade-in pb-12">
             <BlogHeader
                 id={id}
-                onCancel={() => navigate('/admin-panel/blogs')}
+                onCancel={() => navigate('/blogs')}
                 windowWidth={windowWidth}
             />
 

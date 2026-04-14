@@ -244,7 +244,7 @@ const BlogManagement = () => {
           <p className="text-slate-500 hidden sm:block">Create and manage content for your property platform.</p>
         </div>
         <NavLink
-          to="/admin-panel/blogs/add"
+          to="/blogs/add"
           className="ag-button flex items-center justify-center space-x-2 w-full min-[427px]:w-auto cursor-pointer whitespace-nowrap"
         >
           <Plus size={20} />
@@ -362,7 +362,7 @@ const BlogManagement = () => {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end space-x-2">
                         <NavLink
-                          to={`/admin-panel/blogs/edit/${blog.id}`}
+                          to={`/blogs/edit/${blog.id}`}
                           className="p-2 text-slate-500 hover:text-black transition-colors hover:bg-white rounded-lg border border-transparent hover:border-slate-100 cursor-pointer"
                           title="Edit"
                         >

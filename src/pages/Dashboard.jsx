@@ -305,7 +305,7 @@ const Dashboard = () => {
           <div className="ag-card overflow-hidden">
             <div className="p-6 max-[426px]:p-4 border-b border-slate-50 flex items-center justify-between">
               <h4 className="text-lg font-bold text-black">Recent Properties</h4>
-              <NavLink to="/admin-panel/properties" className="text-sm font-semibold text-primary hover:underline flex items-center">
+              <NavLink to="/properties" className="text-sm font-semibold text-primary hover:underline flex items-center">
                 View All <ChevronRight size={16} />
               </NavLink>
             </div>
@@ -342,7 +342,7 @@ const Dashboard = () => {
           <div className="ag-card overflow-hidden">
             <div className="p-6 max-[426px]:p-4 border-b border-slate-50 flex items-center justify-between">
               <h4 className="text-lg font-bold text-black">Recent Leads</h4>
-              <NavLink to="/admin-panel/inquiries" className="text-sm font-semibold text-primary hover:underline flex items-center text-right">
+              <NavLink to="/enquiries" className="text-sm font-semibold text-primary hover:underline flex items-center text-right">
                 <ChevronRight size={18} />
               </NavLink>
             </div>
@@ -373,7 +373,7 @@ const Dashboard = () => {
           <div className="ag-card overflow-hidden">
             <div className="p-6 max-[426px]:p-4 border-b border-slate-50 flex items-center justify-between">
               <h4 className="text-lg font-bold text-black">Blog Activity</h4>
-              <NavLink to="/admin-panel/blogs" className="text-sm font-semibold text-primary hover:underline flex items-center">
+              <NavLink to="/blogs" className="text-sm font-semibold text-primary hover:underline flex items-center">
                 <ChevronRight size={18} />
               </NavLink>
             </div>
@@ -398,7 +398,7 @@ const Dashboard = () => {
           <div className="ag-card overflow-hidden">
             <div className="p-6 max-[426px]:p-4 border-b border-slate-50 flex items-center justify-between">
               <h4 className="text-lg font-bold text-black">Top Agents</h4>
-              <NavLink to="/admin-panel/users" className="text-sm font-semibold text-primary hover:underline flex items-center">
+              <NavLink to="/users" className="text-sm font-semibold text-primary hover:underline flex items-center">
                 <ChevronRight size={18} />
               </NavLink>
             </div>

@@ -16,28 +16,19 @@ import {
   ChevronDown,
   Key
 } from 'lucide-react';
-
-const usersData = [
-  { id: 1, name: 'Aditya Kulkarni', email: 'aditya@example.com', role: 'Admin', status: 'Active', joinDate: '2025-01-10' },
-  { id: 2, name: 'Sandeep Patil', email: 'sandeep@example.com', role: 'Agent', status: 'Active', joinDate: '2025-02-15' },
-  { id: 3, name: 'Meera Deshmukh', email: 'meera@example.com', role: 'Agent', status: 'Inactive', joinDate: '2025-03-01' },
-  { id: 4, name: 'Prashant More', email: 'prashant@example.com', role: 'User', status: 'Active', joinDate: '2025-03-20' },
-  { id: 5, name: 'Sneha Pawar', email: 'sneha@example.com', role: 'Agent', status: 'Active', joinDate: '2025-02-28' },
-  { id: 6, name: 'Aditya Kulkarni', email: 'aditya@example.com', role: 'Admin', status: 'Active', joinDate: '2025-01-10' },
-  { id: 7, name: 'Sandeep Patil', email: 'sandeep@example.com', role: 'Agent', status: 'Active', joinDate: '2025-02-15' },
-  { id: 8, name: 'Meera Deshmukh', email: 'meera@example.com', role: 'Agent', status: 'Inactive', joinDate: '2025-03-01' },
-  { id: 9, name: 'Prashant More', email: 'prashant@example.com', role: 'User', status: 'Active', joinDate: '2025-03-20' },
-  { id: 10, name: 'Sneha Pawar', email: 'sneha@example.com', role: 'Agent', status: 'Active', joinDate: '2025-02-28' },
-];
+import api from '../utils/api';
 
 const UserManagement = () => {
   const [activeTab, setActiveTab] = useState('all');
-  const [users, setUsers] = useState(usersData);
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState('down');
@@ -51,6 +42,42 @@ const UserManagement = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, activeTab]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [currentPage, itemsPerPage, searchTerm, activeTab]);
+
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        search: searchTerm,
+      };
+      
+      if (activeTab !== 'all') {
+        params.role = activeTab.charAt(0).toUpperCase() + activeTab.slice(1).toLowerCase();
+      }
+
+      const response = await api.get('/admin/users', { params });
+      
+      if (response.data.success !== false) {
+        // Handle both standard response and the one shown in examples
+        const data = response.data.data || response.data.users || [];
+        setUsers(data);
+        setTotalPages(response.data.totalPages || 1);
+        setTotalUsers(response.data.total || data.length);
+      } else {
+        toast.error(response.data.message || 'Failed to fetch users');
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error(error.response?.data?.message || 'Failed to fetch users');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -82,18 +109,37 @@ const UserManagement = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleStatusToggle = (id) => {
-    const user = users.find(u => u.id === id);
+  const handleStatusToggle = async (id) => {
+    const user = users.find(u => (u.id || u._id) === id);
     if (!user) return;
     const nextStatus = user.status === 'Active' ? 'Inactive' : 'Active';
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, status: nextStatus } : u));
-    toast.success(`${user.name} is now ${nextStatus}`);
+    
+    try {
+      const response = await api.patch(`/admin/users/${id}/status`, { status: nextStatus });
+      if (response.data.success !== false) {
+        setUsers(prev => prev.map(u => (u.id || u._id) === id ? { ...u, status: nextStatus } : u));
+        toast.success(`${user.name || user.fullName} is now ${nextStatus}`);
+      } else {
+        toast.error(response.data.message || 'Failed to update status');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update status');
+    }
     setOpenDropdownId(null);
   };
 
-  const handleRoleChange = (id, newRole) => {
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, role: newRole } : u));
-    toast.success(`Role updated to ${newRole}`);
+  const handleRoleChange = async (id, newRole) => {
+    try {
+      const response = await api.patch(`/admin/users/${id}/role`, { role: newRole });
+      if (response.data.success !== false) {
+        setUsers(prev => prev.map(u => (u.id || u._id) === id ? { ...u, role: newRole } : u));
+        toast.success(`Role updated to ${newRole}`);
+      } else {
+        toast.error(response.data.message || 'Failed to update role');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update role');
+    }
     setOpenDropdownId(null);
   };
 
@@ -104,15 +150,18 @@ const UserManagement = () => {
     });
   };
 
-  const handleResetPassword = (name) => {
-    toast.promise(
-      new Promise((resolve) => setTimeout(resolve, 1500)),
-      {
-        loading: `Generating reset link for ${name}...`,
-        success: `Reset link sent to ${name}'s email!`,
-        error: 'Failed to send reset link.',
+  const handleResetPassword = async (id, name) => {
+    const tId = toast.loading(`Generating reset link for ${name}...`);
+    try {
+      const response = await api.post(`/admin/users/${id}/reset-password`);
+      if (response.data.success !== false) {
+        toast.success(`Reset link sent to ${name}'s email!`, { id: tId });
+      } else {
+        toast.error(response.data.message || 'Failed to send reset link', { id: tId });
       }
-    );
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to send reset link.', { id: tId });
+    }
     setOpenDropdownId(null);
   };
 
@@ -130,10 +179,21 @@ const UserManagement = () => {
         </div>
         <div className="flex items-center gap-2 mt-1">
           <button
-            onClick={() => {
-              setUsers(prev => prev.filter(u => u.id !== id));
-              toast.dismiss(t.id);
-              toast.success('User deleted successfully!');
+            onClick={async () => {
+              try {
+                toast.dismiss(t.id);
+                const deleteToastId = toast.loading('Deleting user...');
+                const response = await api.delete(`/admin/users/${id}`);
+                if (response.data.success !== false) {
+                  setUsers(prev => prev.filter(u => (u.id || u._id) !== id));
+                  toast.success('User deleted successfully!', { id: deleteToastId });
+                  fetchUsers(); // Refresh to get correct pagination
+                } else {
+                  toast.error(response.data.message || 'Failed to delete user', { id: deleteToastId });
+                }
+              } catch (error) {
+                toast.error(error.response?.data?.message || 'Failed to delete user');
+              }
             }}
             className="flex-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black px-4 py-3 rounded-full transition-all cursor-pointer active:scale-95 uppercase tracking-wider"
           >
@@ -191,22 +251,7 @@ const UserManagement = () => {
     }, 150);
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesTab = activeTab === 'all' || user.role.toLowerCase() === activeTab.toLowerCase();
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return matchesTab && matchesSearch;
-  });
-
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const paginatedUsers = filteredUsers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const selectedUser = paginatedUsers.find(u => u.id === openDropdownId);
+  const selectedUser = users.find(u => (u.id || u._id) === openDropdownId);
 
   return (
     <div className="space-y-8 animate-fade-in text-left">
@@ -291,16 +336,25 @@ const UserManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {paginatedUsers.length > 0 ? (
-                paginatedUsers.map((user) => (
-                  <tr key={user.id} className={`hover:bg-slate-50/50 transition-colors group ${openDropdownId === user.id ? 'relative z-[60]' : ''}`}>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold shrink-0">
-                          {user.name.charAt(0)}
-                        </div>
-                        <div className="text-left">
-                          <h4 className="font-bold text-semibold text-black text-base leading-tight">{user.name}</h4>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-20 text-center">
+                      <div className="flex flex-col items-center">
+                        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
+                        <p className="text-slate-500 font-medium">Loading users...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : users.length > 0 ? (
+                  users.map((user) => (
+                    <tr key={user.id || user._id} className={`hover:bg-slate-50/50 transition-colors group ${openDropdownId === (user.id || user._id) ? 'relative z-[60]' : ''}`}>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold shrink-0">
+                            {(user.name || user.fullName || 'U').charAt(0)}
+                          </div>
+                          <div className="text-left">
+                            <h4 className="font-bold text-semibold text-black text-base leading-tight">{user.name || user.fullName}</h4>
                           <p className="text-sm text-slate-400">{user.email}</p>
                         </div>
                       </div>
@@ -322,7 +376,7 @@ const UserManagement = () => {
                         <span className={`text-xs font-bold ${user.status === 'Active' ? 'text-emerald-600' : 'text-slate-400'}`}>{user.status}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-xs font-bold text-slate-500">{user.joinDate}</td>
+                      <td className="px-6 py-4 text-xs font-bold text-slate-500">{user.joinDate || new Date(user.createdAt).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end space-x-1">
                         <button
@@ -332,7 +386,7 @@ const UserManagement = () => {
                           <Edit size={18} />
                         </button>
                         <button
-                          onClick={() => handleDelete(user.id, user.name)}
+                          onClick={() => handleDelete(user.id || user._id, user.name || user.fullName)}
                           className="p-2 text-slate-500 hover:text-red-500 transition-colors hover:bg-white rounded-lg border border-transparent hover:border-slate-100 cursor-pointer"
                           title="Delete User"
                         >
@@ -344,9 +398,10 @@ const UserManagement = () => {
                             onMouseLeave={handleMouseLeave}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setOpenDropdownId(openDropdownId === user.id ? null : user.id);
+                              const id = user.id || user._id;
+                              setOpenDropdownId(openDropdownId === id ? null : id);
                             }}
-                            className={`p-2 transition-colors rounded-lg cursor-pointer ${openDropdownId === user.id ? 'bg-slate-100 text-black' : 'text-slate-400 hover:text-slate-800'}`}
+                            className={`p-2 transition-colors rounded-lg cursor-pointer ${openDropdownId === (user.id || user._id) ? 'bg-slate-100 text-black' : 'text-slate-400 hover:text-slate-800'}`}
                             title="Actions"
                           >
                             <MoreVertical size={18} />
@@ -412,7 +467,7 @@ const UserManagement = () => {
                     </div>
 
                     <button
-                      onClick={() => handleResetPassword(selectedUser.name)}
+                      onClick={() => handleResetPassword(selectedUser.id || selectedUser._id, selectedUser.name || selectedUser.fullName)}
                       className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer text-left"
                     >
                       <Key size={16} />
@@ -428,7 +483,7 @@ const UserManagement = () => {
                     </button>
 
                     <button
-                      onClick={() => handleStatusToggle(selectedUser.id)}
+                      onClick={() => handleStatusToggle(selectedUser.id || selectedUser._id)}
                       className={`w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer text-left
                         ${selectedUser.status === 'Active' ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
                     >
@@ -443,7 +498,7 @@ const UserManagement = () => {
                     {['Admin', 'Agent', 'User'].map((role) => (
                       <button
                         key={role}
-                        onClick={() => handleRoleChange(selectedUser.id, role)}
+                        onClick={() => handleRoleChange(selectedUser.id || selectedUser._id, role)}
                         className={`w-full flex items-center justify-between px-4 py-2.5 font-semibold text-sm transition-colors cursor-pointer text-left
                           ${selectedUser.role === role
                             ? 'text-primary font-bold bg-primary/5'
@@ -465,7 +520,7 @@ const UserManagement = () => {
         <div className="px-6 py-6 bg-slate-50/50 border-t border-slate-100 flex flex-col nav:flex-row items-center justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-8 w-full nav:w-auto">
             <p className="text-sm text-black font-medium whitespace-nowrap">
-              Showing <span className="text-primary font-bold">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-primary font-bold">{Math.min(currentPage * itemsPerPage, filteredUsers.length)}</span> of <span className="text-primary font-bold">{filteredUsers.length}</span> users
+              Showing <span className="text-primary font-bold">{users.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to <span className="text-primary font-bold">{Math.min(currentPage * itemsPerPage, totalUsers)}</span> of <span className="text-primary font-bold">{totalUsers}</span> users
             </p>
 
             <div
