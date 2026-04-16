@@ -14,7 +14,7 @@ import ReviewManagement from './pages/ReviewManagement';
 function App() {
   return (
     <AuthProvider>
-      <Router basename="/admin-panel">
+      <Router basename="/">
         <Toaster
           position="top-right"
           toastOptions={{

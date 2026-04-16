@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  base: '/admin-panel/', 
+  base: '/', 
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
