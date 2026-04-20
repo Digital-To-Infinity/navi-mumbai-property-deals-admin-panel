@@ -345,7 +345,7 @@ const CRMManagement = () => {
                       </div>
                       <div className="text-left">
                         <h4 className="font-bold text-black">{enquiry.name}</h4>
-                        <p className="text-sm text-slate-500">Received on {formatDate(enquiry.createdAt || enquiry.date)}</p>
+                        <p className="text-sm text-slate-500">Received on {formatDate(enquiry.created_at || enquiry.createdAt || enquiry.date)}</p>
                       </div>
                     </div>
                     <div>
