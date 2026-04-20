@@ -62,6 +62,21 @@ const CRMManagement = () => {
     }
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'N/A';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Date not available';
+    
+    return new Intl.DateTimeFormat('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }).format(date);
+  };
+
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
@@ -330,7 +345,7 @@ const CRMManagement = () => {
                       </div>
                       <div className="text-left">
                         <h4 className="font-bold text-black">{enquiry.name}</h4>
-                        <p className="text-sm text-slate-500">Received on {new Date(enquiry.createdAt || enquiry.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                        <p className="text-sm text-slate-500">Received on {formatDate(enquiry.createdAt || enquiry.date)}</p>
                       </div>
                     </div>
                     <div>
