@@ -29,6 +29,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import api from '../utils/api';
 
 // Data from other modules (Simplified/Mocked for Dashboard)
 const propertiesData = [
@@ -98,12 +99,39 @@ const StatCard = ({ title, value, icon: Icon, trend, trendValue, color = "primar
 
 const Dashboard = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 426);
+  const [stats, setStats] = useState({
+    totalProperties: 0,
+    activeListings: 0,
+    newLeads: 0,
+    totalAgents: 0
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 426);
     window.addEventListener('resize', handleResize);
+    fetchStats();
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const fetchStats = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get('/admin/dashboard/stats');
+      if (response.data) {
+        setStats({
+            totalProperties: response.data.totalProperties || 0,
+            activeListings: response.data.activeListings || 0,
+            newLeads: response.data.newLeads || 0,
+            totalAgents: response.data.totalAgents || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-8 animate-fade-in text-left">
@@ -117,7 +145,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Properties"
-          value="1,284"
+          value={isLoading ? '...' : stats.totalProperties.toLocaleString()}
           icon={Building2}
           trend="up"
           trendValue="12.5%"
@@ -125,7 +153,7 @@ const Dashboard = () => {
         />
         <StatCard
           title="Active Listings"
-          value="842"
+          value={isLoading ? '...' : stats.activeListings.toLocaleString()}
           icon={TrendingUp}
           trend="up"
           trendValue="8.2%"
@@ -133,7 +161,7 @@ const Dashboard = () => {
         />
         <StatCard
           title="New Leads"
-          value="156"
+          value={isLoading ? '...' : stats.newLeads.toLocaleString()}
           icon={Users}
           trend="up"
           trendValue="24.1%"
@@ -141,7 +169,7 @@ const Dashboard = () => {
         />
         <StatCard
           title="Total Agents"
-          value="42"
+          value={isLoading ? '...' : stats.totalAgents.toLocaleString()}
           icon={UserPlus}
           trend="up"
           trendValue="4.8%"

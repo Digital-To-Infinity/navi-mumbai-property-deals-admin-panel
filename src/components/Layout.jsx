@@ -41,11 +41,15 @@ const Layout = () => {
                     <div className="flex items-center space-x-2 nav:space-x-4">
                         <div className="flex items-center space-x-3 pl-2 nav:pl-4 border-l border-slate-100">
                              <div className="hidden nav:block text-right">
-                                <p className="text-sm font-bold text-slate-800 leading-none">NM Property Deals</p>
-                                <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">Administrator</p>
+                                <p className="text-sm font-bold text-slate-800 leading-none">{user?.name || user?.fullName || 'Admin User'}</p>
+                                <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">{user?.role || 'Administrator'}</p>
                             </div>
                             <div className="w-10 h-10 bg-primary-light rounded-xl flex items-center justify-center border border-primary/10 overflow-hidden">
-                                <img src={icon} alt="NM" className="w-full h-full object-contain p-1" />
+                                {user?.avatar ? (
+                                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <img src={icon} alt="NM" className="w-full h-full object-contain p-1" />
+                                )}
                             </div>
                         </div>
                     </div>

@@ -62,18 +62,34 @@ const UserManagement = () => {
 
       const response = await api.get('/admin/users', { params });
       
-      if (response.data.success !== false) {
-        // Handle both standard response and the one shown in examples
-        const data = response.data.data || response.data.users || [];
-        setUsers(data);
-        setTotalPages(response.data.totalPages || 1);
-        setTotalUsers(response.data.total || data.length);
-      } else {
-        toast.error(response.data.message || 'Failed to fetch users');
+      // The backend could return the list in several formats:
+      // 1. { success: true, data: [...], total: 100, totalPages: 10 }
+      // 2. { success: true, users: [...], total: 100 }
+      // 3. [...] (direct array)
+      
+      let usersList = [];
+      let total = 0;
+      let pages = 1;
+
+      if (Array.isArray(response.data)) {
+        usersList = response.data;
+        total = response.data.length;
+      } else if (response.data) {
+        usersList = response.data.data || response.data.users || [];
+        total = response.data.total || usersList.length;
+        pages = response.data.totalPages || Math.ceil(total / itemsPerPage) || 1;
       }
+
+      setUsers(usersList);
+      setTotalUsers(total);
+      setTotalPages(pages);
+      
     } catch (error) {
       console.error('Error fetching users:', error);
-      toast.error(error.response?.data?.message || 'Failed to fetch users');
+      // Only show error if it's not a cancelled request
+      if (error.code !== 'ERR_CANCELED') {
+        toast.error(error.response?.data?.message || 'Failed to fetch users');
+      }
     } finally {
       setIsLoading(false);
     }
