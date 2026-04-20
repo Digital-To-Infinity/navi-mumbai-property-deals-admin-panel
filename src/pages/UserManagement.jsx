@@ -62,11 +62,6 @@ const UserManagement = () => {
 
       const response = await api.get('/admin/users', { params });
       
-      // The backend could return the list in several formats:
-      // 1. { success: true, data: [...], total: 100, totalPages: 10 }
-      // 2. { success: true, users: [...], total: 100 }
-      // 3. [...] (direct array)
-      
       let usersList = [];
       let total = 0;
       let pages = 1;
@@ -275,14 +270,14 @@ const UserManagement = () => {
       <div className="flex flex-col min-[427px]:flex-row min-[427px]:items-center justify-between gap-4">
         <div className="text-left">
           <h1 className="text-2xl max-[426px]:text-3xl max-[426px]:mb-4 max-[426px]:text-center font-bold text-black">User Management</h1>
-          <p className="text-slate-500 hidden sm:block">Manage agents, administrators, and regular users.</p>
+          <p className="text-slate-500 hidden sm:block">Manage administrators and regular users.</p>
         </div>
       </div>
 
       {/* Tabs & Filters */}
       <div className="flex flex-col nav:flex-row nav:items-center justify-between gap-6">
         <div className="flex items-center bg-white p-1 rounded-xl border border-slate-100 w-full nav:w-fit overflow-x-auto no-scrollbar shrink-0">
-          {['all', 'admin', 'agent', 'user'].map((tab) => (
+          {['all', 'admin', 'user'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -378,8 +373,7 @@ const UserManagement = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <span className={`flex items-center px-3 py-1 rounded-lg text-xs font-bold border ${user.role === 'Admin' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' :
-                          user.role === 'Agent' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                            'bg-slate-50 text-slate-700 border-slate-100'
+                             'bg-slate-50 text-slate-700 border-slate-100'
                           }`}>
                           {user.role === 'Admin' ? <ShieldCheck size={14} className="mr-1.5" /> : <Shield size={14} className="mr-1.5" />}
                           {user.role}
@@ -511,7 +505,7 @@ const UserManagement = () => {
                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Change Role</p>
                     </div>
 
-                    {['Admin', 'Agent', 'User'].map((role) => (
+                    {['Admin', 'User'].map((role) => (
                       <button
                         key={role}
                         onClick={() => handleRoleChange(selectedUser.id || selectedUser._id, role)}

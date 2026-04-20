@@ -102,8 +102,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({
     totalProperties: 0,
     activeListings: 0,
-    newLeads: 0,
-    totalAgents: 0
+    newLeads: 0
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -122,8 +121,7 @@ const Dashboard = () => {
         setStats({
             totalProperties: response.data.totalProperties || 0,
             activeListings: response.data.activeListings || 0,
-            newLeads: response.data.newLeads || 0,
-            totalAgents: response.data.totalAgents || 0
+            newLeads: response.data.newLeads || 0
         });
       }
     } catch (error) {
@@ -142,7 +140,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           title="Total Properties"
           value={isLoading ? '...' : stats.totalProperties.toLocaleString()}
@@ -166,14 +164,6 @@ const Dashboard = () => {
           trend="up"
           trendValue="24.1%"
           color="emerald-600"
-        />
-        <StatCard
-          title="Total Agents"
-          value={isLoading ? '...' : stats.totalAgents.toLocaleString()}
-          icon={UserPlus}
-          trend="up"
-          trendValue="4.8%"
-          color="amber-600"
         />
       </div>
 
@@ -422,39 +412,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Top Performing Agents */}
-          <div className="ag-card overflow-hidden">
-            <div className="p-6 max-[426px]:p-4 border-b border-slate-50 flex items-center justify-between">
-              <h4 className="text-lg font-bold text-black">Top Agents</h4>
-              <NavLink to="/users" className="text-sm font-semibold text-primary hover:underline flex items-center">
-                <ChevronRight size={18} />
-              </NavLink>
-            </div>
-            <div className="p-4 space-y-4">
-              {[
-                { name: 'Sandeep Patil', leads: 48, rate: '92%', avatar: 'SP' },
-                { name: 'Meera Deshmukh', leads: 36, rate: '85%', avatar: 'MD' },
-                { name: 'Sneha Pawar', leads: 24, rate: '78%', avatar: 'SP' }
-              ].map((agent, i) => (
-                <div key={agent.name} className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-[12px] font-bold ${i === 0 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'
-                      }`}>
-                      {agent.avatar}
-                    </div>
-                    <div>
-                      <p className="text-base font-bold text-black">{agent.name}</p>
-                      <p className="text-[12px] text-slate-500">{agent.leads} Active Leads</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-emerald-600">{agent.rate}</p>
-                    <p className="text-[12px] text-slate-500 font-medium whitespace-nowrap">Conv. Rate</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+
 
           {/* Quick Stats Summary */}
           <div className="ag-card p-6 max-[426px]:p-4 bg-primary/5 border-primary/10">
