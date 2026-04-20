@@ -39,9 +39,9 @@ const CRMManagement = () => {
     fetchEnquiries();
   }, [activeTab]);
 
-  const fetchEnquiries = async () => {
+  const fetchEnquiries = async (showLoader = true) => {
     try {
-      setLoading(true);
+      if (showLoader) setLoading(true);
       const params = {};
       if (activeTab !== 'all') {
         params.status = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
@@ -58,7 +58,7 @@ const CRMManagement = () => {
       console.error('Error fetching enquiries:', error);
       toast.error('Failed to fetch enquiries');
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   };
 
@@ -126,6 +126,7 @@ const CRMManagement = () => {
         inq.id === id ? { ...inq, status: 'Resolved' } : inq
       ));
       toast.success('Enquiry marked as resolved!');
+      fetchEnquiries(false);
     } catch (error) {
       console.error('Error resolving enquiry:', error);
       toast.error('Failed to update status');
@@ -140,6 +141,7 @@ const CRMManagement = () => {
       ));
       toast.success(`Lead status updated to ${newStatus}`);
       setOpenDropdownId(null);
+      fetchEnquiries(false);
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Failed to update status');
@@ -173,6 +175,7 @@ const CRMManagement = () => {
                 setEnquiries(prev => prev.filter(e => e.id !== id));
                 toast.dismiss(t.id);
                 toast.success('Enquiry deleted successfully!');
+                fetchEnquiries(false);
               } catch (error) {
                 console.error('Error deleting enquiry:', error);
                 toast.error('Failed to delete enquiry');
@@ -205,12 +208,13 @@ const CRMManagement = () => {
   };
 
   const filteredEnquiries = enquiries.filter(inq => {
+    const matchesTab = activeTab === 'all' || inq.status?.toLowerCase() === activeTab.toLowerCase();
     const matchesSearch =
-      inq.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inq.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      inq.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      inq.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (inq.propertyTitle || inq.property || '').toLowerCase().includes(searchTerm.toLowerCase());
 
-    return matchesSearch;
+    return matchesTab && matchesSearch;
   });
 
   const selectedEnquiry = enquiries.find(e => e.id === openDropdownId);
