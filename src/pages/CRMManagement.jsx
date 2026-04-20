@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import api from '../utils/api';
 import {
   Search,
   Mail,
@@ -15,19 +16,15 @@ import {
   X,
   Trash2,
   MessageCircle,
-  Copy
+  Copy,
+  Loader2
 } from 'lucide-react';
-
-const enquiriesData = [
-  { id: 1, name: 'Rahul Sharma', email: 'rahul.s@example.com', phone: '+91 98765 43210', property: 'Luxury Villa Belapur', status: 'Pending', date: '2026-03-22', message: 'I am interested in this villa. Is it available for a visit this weekend?' },
-  { id: 2, name: 'Anjali Gupta', email: 'anjali@example.com', phone: '+91 91234 56789', property: 'Office Space Vashi', status: 'Resolved', date: '2026-03-21', message: 'Looking for a 2000 sqft office space in Vashi.' },
-  { id: 3, name: 'Vikram Singh', email: 'vikram@example.com', phone: '+91 98989 89898', property: 'Modern Flat Kamothe', status: 'Pending', date: '2026-03-20', message: 'What is the exact maintenance cost for this flat?' },
-  { id: 4, name: 'Priya Joshi', email: 'priya@example.com', phone: '+91 91111 22222', property: 'Plot Kharghar', status: 'Resolved', date: '2026-03-19', message: 'I am interested in buying a plot in Kharghar.' },
-];
 
 const CRMManagement = () => {
   const [activeTab, setActiveTab] = useState('all');
-  const [enquiries, setEnquiries] = useState(enquiriesData);
+  const [enquiries, setEnquiries] = useState([]);
+  const [counts, setCounts] = useState({ total: 0, pending: 0, resolved: 0 });
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [isFocused, setIsFocused] = useState(false);
@@ -37,6 +34,33 @@ const CRMManagement = () => {
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
   const hoverTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    fetchEnquiries();
+  }, [activeTab]);
+
+  const fetchEnquiries = async () => {
+    try {
+      setLoading(true);
+      const params = {};
+      if (activeTab !== 'all') {
+        params.status = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
+      }
+      const response = await api.get('/admin/enquiries', { params });
+      // The API summary says the response shape is { data: [...], total, pendingCount, resolvedCount }
+      setEnquiries(response.data.data || []);
+      setCounts({
+        total: response.data.total || 0,
+        pending: response.data.pendingCount || 0,
+        resolved: response.data.resolvedCount || 0
+      });
+    } catch (error) {
+      console.error('Error fetching enquiries:', error);
+      toast.error('Failed to fetch enquiries');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -95,23 +119,35 @@ const CRMManagement = () => {
     }, 150);
   };
 
-  const handleResolve = (id) => {
-    setEnquiries(prev => prev.map(inq =>
-      inq.id === id ? { ...inq, status: 'Resolved' } : inq
-    ));
-    toast.success('Enquiry marked as resolved!');
+  const handleResolve = async (id) => {
+    try {
+      await api.patch(`/admin/enquiries/${id}/status`, { status: 'Resolved' });
+      setEnquiries(prev => prev.map(inq =>
+        inq.id === id ? { ...inq, status: 'Resolved' } : inq
+      ));
+      toast.success('Enquiry marked as resolved!');
+    } catch (error) {
+      console.error('Error resolving enquiry:', error);
+      toast.error('Failed to update status');
+    }
   };
 
-  const handleStatusUpdate = (id, newStatus) => {
-    setEnquiries(prev => prev.map(inq =>
-      inq.id === id ? { ...inq, status: newStatus } : inq
-    ));
-    toast.success(`Lead status updated to ${newStatus}`);
-    setOpenDropdownId(null);
+  const handleStatusUpdate = async (id, newStatus) => {
+    try {
+      await api.patch(`/admin/enquiries/${id}/status`, { status: newStatus });
+      setEnquiries(prev => prev.map(inq =>
+        inq.id === id ? { ...inq, status: newStatus } : inq
+      ));
+      toast.success(`Lead status updated to ${newStatus}`);
+      setOpenDropdownId(null);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Failed to update status');
+    }
   };
 
   const handleCopyDetails = (enquiry) => {
-    const details = `Name: ${enquiry.name}\nEmail: ${enquiry.email}\nPhone: ${enquiry.phone}\nProperty: ${enquiry.property}\nMessage: ${enquiry.message}`;
+    const details = `Name: ${enquiry.name}\nEmail: ${enquiry.email}\nPhone: ${enquiry.phone}\nProperty: ${enquiry.propertyTitle || enquiry.property}\nMessage: ${enquiry.message}`;
     navigator.clipboard.writeText(details);
     toast.success('Lead details copied to clipboard!');
     setOpenDropdownId(null);
@@ -131,10 +167,16 @@ const CRMManagement = () => {
         </div>
         <div className="flex items-center gap-2 mt-1">
           <button
-            onClick={() => {
-              setEnquiries(prev => prev.filter(e => e.id !== id));
-              toast.dismiss(t.id);
-              toast.success('Enquiry deleted successfully!');
+            onClick={async () => {
+              try {
+                await api.delete(`/admin/enquiries/${id}`);
+                setEnquiries(prev => prev.filter(e => e.id !== id));
+                toast.dismiss(t.id);
+                toast.success('Enquiry deleted successfully!');
+              } catch (error) {
+                console.error('Error deleting enquiry:', error);
+                toast.error('Failed to delete enquiry');
+              }
             }}
             className="flex-1 bg-red-600 hover:bg-red-700 text-white text-[12px] font-black px-4 py-3 rounded-full transition-all cursor-pointer active:scale-95 uppercase tracking-wider"
           >
@@ -163,13 +205,12 @@ const CRMManagement = () => {
   };
 
   const filteredEnquiries = enquiries.filter(inq => {
-    const matchesTab = activeTab === 'all' || inq.status.toLowerCase() === activeTab.toLowerCase();
     const matchesSearch =
       inq.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inq.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inq.property.toLowerCase().includes(searchTerm.toLowerCase());
+      (inq.propertyTitle || inq.property || '').toLowerCase().includes(searchTerm.toLowerCase());
 
-    return matchesTab && matchesSearch;
+    return matchesSearch;
   });
 
   const selectedEnquiry = enquiries.find(e => e.id === openDropdownId);
@@ -188,21 +229,21 @@ const CRMManagement = () => {
           <div className="p-3 bg-primary/10 text-primary rounded-xl"><MessageSquare size={24} /></div>
           <div>
             <p className="text-sm font-semibold text-slate-500">Total Enquiries</p>
-            <p className="text-xl font-bold text-black">{enquiries.length}</p>
+            <p className="text-xl font-bold text-black">{counts.total}</p>
           </div>
         </div>
         <div className="ag-card p-6 max-[769px]:p-4 max-[426px]:p-6 flex items-center space-x-4 border-l-4 border-amber-500">
           <div className="p-3 bg-amber-50 text-amber-600 rounded-xl"><Clock size={24} /></div>
           <div>
             <p className="text-sm font-semibold text-slate-500">Pending Follow-up</p>
-            <p className="text-xl font-bold text-black">{enquiries.filter(i => i.status === 'Pending').length}</p>
+            <p className="text-xl font-bold text-black">{counts.pending}</p>
           </div>
         </div>
         <div className="ag-card p-6 max-[769px]:p-4 max-[426px]:p-6 flex items-center space-x-4 border-l-4 border-emerald-500">
           <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><CheckCircle2 size={24} /></div>
           <div>
             <p className="text-sm font-semibold text-slate-500">Resolved</p>
-            <p className="text-xl font-bold text-black">{enquiries.filter(i => i.status === 'Resolved').length}</p>
+            <p className="text-xl font-bold text-black">{counts.resolved}</p>
           </div>
         </div>
       </div>
@@ -267,75 +308,95 @@ const CRMManagement = () => {
       </div>
 
       {/* Enquiry List */}
-      <div className="grid grid-cols-1 gap-6">
-        {filteredEnquiries.map((enquiry) => (
-          <div key={enquiry.id} className="ag-card p-6 max-[426px]:p-4 hover:border-primary/30 transition-all group relative">
-            <div className="flex flex-col space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 font-bold">
-                      {enquiry.name.charAt(0)}
+      <div className="grid grid-cols-1 gap-6 relative min-h-[400px]">
+        {loading ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            <p className="text-slate-500 font-medium">Fetching enquiries...</p>
+          </div>
+        ) : filteredEnquiries.length > 0 ? (
+          filteredEnquiries.map((enquiry) => (
+            <div key={enquiry.id} className="ag-card p-6 max-[426px]:p-4 hover:border-primary/30 transition-all group relative">
+              <div className="flex flex-col space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 font-bold">
+                        {enquiry.name?.charAt(0) || 'U'}
+                      </div>
+                      <div className="text-left">
+                        <h4 className="font-bold text-black">{enquiry.name}</h4>
+                        <p className="text-sm text-slate-500">Received on {new Date(enquiry.createdAt || enquiry.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                      </div>
                     </div>
-                    <div className="text-left">
-                      <h4 className="font-bold text-black">{enquiry.name}</h4>
-                      <p className="text-sm text-slate-500">Received on {enquiry.date}</p>
+                    <div>
+                      {enquiry.status === 'Resolved' ? (
+                        <span className="ag-badge ag-badge-published">Resolved</span>
+                      ) : (
+                        <span className="ag-badge ag-badge-draft">Pending</span>
+                      )}
                     </div>
                   </div>
-                  <div>
-                    {enquiry.status === 'Resolved' ? (
-                      <span className="ag-badge ag-badge-published">Resolved</span>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-3 text-sm">
+                    <div className="flex items-center text-slate-600 font-medium"><Mail size={16} className="mr-2 text-primary" /> {enquiry.email}</div>
+                    <div className="flex items-center text-slate-600 font-medium"><Phone size={16} className="mr-2 text-primary" /> {enquiry.phone}</div>
+                  </div>
+
+                  <div className="flex items-center text-slate-900 font-semibold text-left">
+                    <MapPin size={16} className="mr-2 text-primary" /> 
+                    {enquiry.propertyTitle || enquiry.property ? (
+                      <>Interested in: {enquiry.propertyTitle || enquiry.property}</>
                     ) : (
-                      <span className="ag-badge ag-badge-draft">Pending</span>
+                      <>General Enquiry</>
                     )}
                   </div>
+
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-base text-slate-700 leading-relaxed text-left">
+                    {enquiry.message}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-3 text-sm">
-                  <div className="flex items-center text-slate-600 font-medium"><Mail size={16} className="mr-2 text-primary" /> {enquiry.email}</div>
-                  <div className="flex items-center text-slate-600 font-medium"><Phone size={16} className="mr-2 text-primary" /> {enquiry.phone}</div>
-                </div>
+                {/* Action Bar */}
+                <div className="flex flex-row items-center justify-between w-full border-t border-slate-100 pt-6">
+                  <div>
+                    {enquiry.status === 'Pending' && (
+                      <button
+                        onClick={() => handleResolve(enquiry.id)}
+                        className="flex items-center bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+                      >
+                        <Check size={18} className="mr-2" />
+                        Mark Resolved
+                      </button>
+                    )}
+                  </div>
 
-                <div className="flex items-center text-slate-900 font-semibold text-left">
-                  <MapPin size={16} className="mr-2 text-primary" /> Interested in: {enquiry.property}
-                </div>
-
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-base text-slate-700 leading-relaxed text-left">
-                  {enquiry.message}
-                </div>
-              </div>
-
-              {/* Action Bar */}
-              <div className="flex flex-row items-center justify-between w-full border-t border-slate-100 pt-6">
-                <div>
-                  {enquiry.status === 'Pending' && (
+                  <div className="relative">
                     <button
-                      onClick={() => handleResolve(enquiry.id)}
-                      className="flex items-center bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+                      onMouseEnter={(e) => handleMouseEnter(e, enquiry.id)}
+                      onMouseLeave={handleMouseLeave}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdownId(openDropdownId === enquiry.id ? null : enquiry.id);
+                      }}
+                      className={`p-2.5 transition-colors rounded-full border cursor-pointer ${openDropdownId === enquiry.id ? 'bg-slate-100 text-black border-slate-200' : 'text-slate-500 hover:text-slate-800 bg-white border-slate-200 hover:bg-slate-50'}`}
                     >
-                      <Check size={18} className="mr-2" />
-                      Mark Resolved
+                      <MoreVertical size={18} />
                     </button>
-                  )}
-                </div>
-
-                <div className="relative">
-                  <button
-                    onMouseEnter={(e) => handleMouseEnter(e, enquiry.id)}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenDropdownId(openDropdownId === enquiry.id ? null : enquiry.id);
-                    }}
-                    className={`p-2.5 transition-colors rounded-full border cursor-pointer ${openDropdownId === enquiry.id ? 'bg-slate-100 text-black border-slate-200' : 'text-slate-500 hover:text-slate-800 bg-white border-slate-200 hover:bg-slate-50'}`}
-                  >
-                    <MoreVertical size={18} />
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-slate-100">
+            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-4">
+              <Search size={32} />
+            </div>
+            <p className="text-slate-900 font-bold">No enquiries found</p>
+            <p className="text-slate-500 text-sm">Try adjusting your search or filters</p>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Action Dropdown Portal */}
@@ -382,7 +443,7 @@ const CRMManagement = () => {
                     <span>Email Lead</span>
                   </a>
                   <a
-                    href={`https://wa.me/${selectedEnquiry.phone.replace(/[^0-9]/g, '')}`}
+                    href={`https://wa.me/${selectedEnquiry.phone?.replace(/[^0-9]/g, '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer"
@@ -433,3 +494,4 @@ const CRMManagement = () => {
 };
 
 export default CRMManagement;
+
