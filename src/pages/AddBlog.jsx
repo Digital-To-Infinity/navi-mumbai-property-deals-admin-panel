@@ -8,8 +8,9 @@ import PublishingSettings from '../components/add-blog/PublishingSettings';
 import BlogImageUpload from '../components/add-blog/BlogImageUpload';
 import SEOTags from '../components/add-blog/SEOTags';
 import BlogActions from '../components/add-blog/BlogActions';
+import api from '../utils/api';
 
-const categoryOptions = [
+const defaultCategoryOptions = [
     { value: 'Market Insights', label: 'Market Insights' },
     { value: 'Buying Guide', label: 'Buying Guide' },
     { value: 'Investment', label: 'Investment' },
@@ -33,13 +34,97 @@ const AddBlog = () => {
     const [images, setImages] = useState([]);
     const [tags, setTags] = useState([]);
     const [tagInput, setTagInput] = useState('');
+    const [categoryOptions, setCategoryOptions] = useState(defaultCategoryOptions);
+    const [isLoadingCategories, setIsLoadingCategories] = useState(false);
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
     useEffect(() => {
         const handleResize = () => setWindowWidth(window.innerWidth);
         window.addEventListener('resize', handleResize);
+        fetchCategories();
+        if (id) {
+            fetchBlog();
+        }
         return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    }, [id]);
+
+    const fetchBlog = async () => {
+        try {
+            const response = await api.get(`/admin/blogs/${id}`);
+            if (response.data?.success) {
+                const blog = response.data.data;
+                setTitle(blog.title);
+                setContent(blog.content);
+                setCategory(blog.category);
+                setAuthor(blog.author);
+                setAuthorRole(blog.author_role);
+                setReadTime(blog.read_time);
+                setStatus(blog.status);
+                setTags(blog.tags || []);
+                // For images, we can't easily set File objects back, 
+                // so we store the URL. BlogImageUpload handles string URLs.
+                if (blog.cover_image_url) {
+                    setImages([blog.cover_image_url]);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch blog:', error);
+            toast.error('Failed to load blog data');
+        }
+    };
+
+    const fetchCategories = async () => {
+        setIsLoadingCategories(true);
+        try {
+            const response = await api.get('/blogs/categories');
+            if (response.data?.success) {
+                const apiCategories = response.data.data.map(cat => ({
+                    value: cat.name,
+                    label: cat.name
+                }));
+                // Combine default with API categories, ensuring no duplicates
+                const combined = [...apiCategories];
+                const seen = new Set(combined.map(c => c.value));
+                
+                defaultCategoryOptions.forEach(opt => {
+                    if (!seen.has(opt.value)) {
+                        combined.push(opt);
+                    }
+                });
+                
+                // Ensure "Other" is always at the end
+                const finalOptions = combined.filter(opt => opt.value !== 'Other');
+                finalOptions.push({ value: 'Other', label: 'Other (Add Custom)' });
+                
+                setCategoryOptions(finalOptions);
+            }
+        } catch (error) {
+            console.error('Failed to fetch categories:', error);
+            // Fallback to default options already set in state initialization
+        } finally {
+            setIsLoadingCategories(false);
+        }
+    };
+
+    const handleAddCategory = async () => {
+        if (!customCategory.trim()) {
+            toast.error('Please enter a category name');
+            return;
+        }
+
+        try {
+            const response = await api.post('/admin/blogs/categories', { name: customCategory.trim() });
+            if (response.data?.success) {
+                toast.success('Category added successfully!');
+                // Reset custom category and refresh list
+                setCategory(customCategory.trim());
+                setCustomCategory('');
+                await fetchCategories();
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to add category');
+        }
+    };
 
     const handleTitleChange = (e) => {
         setTitle(e.target.value);
@@ -78,41 +163,56 @@ const AddBlog = () => {
         readTime.trim() !== '' &&
         images.length > 0;
 
-    const handleSave = (overridingStatus = null) => {
+    const handleSave = async (overridingStatus = null) => {
         if (!isFormValid) {
             toast.error('Please fill in all required fields and upload a cover image.');
             return;
         }
+
         const finalStatus = overridingStatus || status;
-        const newBlog = {
-            id: id ? parseInt(id) : Date.now(),
-            title: title || 'Untitled Article',
-            slug: title.toLowerCase().replace(/\s+/g, '-'),
-            content,
-            status: finalStatus,
-            category: category === 'Other' ? customCategory : (category || 'Market Insights'),
-            author: author || 'Admin',
-            authorRole: authorRole || 'Editor',
-            readTime: readTime || '5 min read',
-            images,
-            tags,
-            date: new Date().toISOString().split('T')[0],
-            views: 0,
-            featured: false
-        };
+        const finalCategory = category === 'Other' ? customCategory : (category || 'Market Insights');
+        
+        const formData = new FormData();
+        formData.append('title', title || 'Untitled Article');
+        formData.append('content', content);
+        formData.append('category', finalCategory);
+        formData.append('author', author || 'Admin');
+        formData.append('authorRole', authorRole || 'Editor');
+        formData.append('readTime', readTime || '5 min read');
+        formData.append('status', finalStatus);
+        formData.append('tags', JSON.stringify(tags));
+        formData.append('date', new Date().toISOString().split('T')[0]);
 
-        // Persistence logic for prototype
-        const existingCustomBlogs = JSON.parse(localStorage.getItem('custom_blogs') || '[]');
-        let updatedBlogs;
-        if (id) {
-            updatedBlogs = existingCustomBlogs.map(b => b.id === newBlog.id ? newBlog : b);
-        } else {
-            updatedBlogs = [newBlog, ...existingCustomBlogs];
+        // Handing cover image
+        if (images.length > 0) {
+            const coverImage = images[0];
+            if (coverImage.file) {
+                formData.append('coverImage', coverImage.file);
+            }
+            // If it's a string, it means it's an existing URL, 
+            // the backend update controller handles it if no new file is provided.
         }
-        localStorage.setItem('custom_blogs', JSON.stringify(updatedBlogs));
 
-        toast.success(id ? 'Article updated successfully!' : `Article ${finalStatus === 'Published' ? 'published' : 'saved as draft'} successfully!`);
-        navigate('/blogs');
+        try {
+            let response;
+            if (id) {
+                response = await api.put(`/admin/blogs/${id}`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+            } else {
+                response = await api.post('/admin/blogs', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+            }
+
+            if (response.data?.success) {
+                toast.success(id ? 'Article updated successfully!' : `Article ${finalStatus === 'Published' ? 'published' : 'saved as draft'} successfully!`);
+                navigate('/blogs');
+            }
+        } catch (error) {
+            console.error('Save error:', error);
+            toast.error(error.response?.data?.message || 'Failed to save article');
+        }
     };
 
     return (
@@ -148,6 +248,7 @@ const AddBlog = () => {
                     setCategory={setCategory}
                     customCategory={customCategory}
                     setCustomCategory={setCustomCategory}
+                    handleAddCategory={handleAddCategory}
                     status={status}
                     setStatus={setStatus}
                     categoryOptions={categoryOptions}

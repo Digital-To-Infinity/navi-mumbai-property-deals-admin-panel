@@ -20,26 +20,16 @@ import {
   Archive,
   Star
 } from 'lucide-react';
+import api from '../utils/api';
 
-const blogsData = [
-  { id: 1, title: 'Upcoming Infrastructure Projects in Navi Mumbai', category: 'Market Insights', status: 'Published', date: '2026-03-22', views: 1240, featured: true },
-  { id: 2, title: 'Why CBD Belapur is the Next Commercial Hub', category: 'Market Insights', status: 'Draft', date: '2026-03-21', views: 0, featured: false },
-  { id: 3, title: 'Top 5 Residential Localities for Families', category: 'Lifestyle', status: 'Published', date: '2026-03-20', views: 890, featured: false },
-  { id: 4, title: 'Navi Mumbai International Airport Updates', category: 'Market Insights', status: 'Published', date: '2026-03-19', views: 3420, featured: true },
-  { id: 5, title: 'Real Estate Investment Tips for 2026', category: 'Investment', status: 'Published', date: '2026-03-15', views: 1560, featured: false },
-  { id: 6, title: 'Eco-friendly Living in Navi Mumbai', category: 'Lifestyle', status: 'Draft', date: '2026-03-10', views: 0, featured: false },
-  { id: 7, title: 'Understanding RERA: A Guide for Homebuyers', category: 'Buying Guide', status: 'Published', date: '2026-03-05', views: 2100, featured: false },
-  { id: 8, title: 'New Metro Lines Coming to Navi Mumbai', category: 'Market Insights', status: 'Published', date: '2026-03-01', views: 4500, featured: true },
-  { id: 9, title: 'Home Loans and Interest Rates in 2026', category: 'Buying Guide', status: 'Published', date: '2026-02-25', views: 1100, featured: false },
-  { id: 10, title: 'The Rise of Co-working Spaces in Belapur', category: 'Market Insights', status: 'Published', date: '2026-02-20', views: 950, featured: false },
-  { id: 11, title: 'Smart City Initiatives in Navi Mumbai', category: 'Market Insights', status: 'Draft', date: '2026-02-15', views: 0, featured: false },
-  { id: 12, title: 'Weekend Getaways near Navi Mumbai', category: 'Lifestyle', status: 'Published', date: '2026-02-10', views: 1800, featured: false },
-];
+// blogsData removed to use real API data
 
 const BlogManagement = () => {
-  const [blogs, setBlogs] = useState(blogsData);
+  const [blogs, setBlogs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [totalItems, setTotalItems] = useState(0);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState('down');
   const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0 });
@@ -57,13 +47,37 @@ const BlogManagement = () => {
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
-    const customBlogs = JSON.parse(localStorage.getItem('custom_blogs') || '[]');
-    if (customBlogs.length > 0) {
-      setBlogs([...customBlogs, ...blogsData]);
-    }
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    fetchBlogs();
+  }, [activeTab, searchTerm, currentPage, itemsPerPage]);
+
+  const fetchBlogs = async () => {
+    setLoading(true);
+    try {
+      const statusParam = activeTab === 'all' ? '' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
+      const response = await api.get('/admin/blogs', {
+        params: {
+          status: statusParam,
+          search: searchTerm,
+          page: currentPage,
+          limit: itemsPerPage
+        }
+      });
+      if (response.data) {
+        setBlogs(response.data.data);
+        setTotalItems(response.data.total);
+      }
+    } catch (error) {
+      console.error('Failed to fetch blogs:', error);
+      toast.error('Failed to load articles');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -124,21 +138,35 @@ const BlogManagement = () => {
     }, 150);
   };
 
-  const handleStatusUpdate = (id, newStatus) => {
-    setBlogs(prev => prev.map(blog =>
-      blog.id === id ? { ...blog, status: newStatus } : blog
-    ));
-    toast.success(`Article status updated to ${newStatus}`);
+  const handleStatusUpdate = async (id, newStatus) => {
+    try {
+      const response = await api.patch(`/admin/blogs/${id}/status`, { status: newStatus });
+      if (response.data?.success) {
+        setBlogs(prev => prev.map(blog =>
+          blog.id === id ? { ...blog, status: newStatus } : blog
+        ));
+        toast.success(`Article status updated to ${newStatus}`);
+      }
+    } catch (error) {
+      toast.error('Failed to update status');
+    }
     setOpenDropdownId(null);
   };
 
-  const handleToggleFeatured = (id) => {
+  const handleToggleFeatured = async (id) => {
     const blog = blogs.find(b => b.id === id);
     if (!blog) return;
 
-    const newState = !blog.featured;
-    setBlogs(prev => prev.map(b => b.id === id ? { ...b, featured: newState } : b));
-    toast.success(newState ? 'Marked as Featured' : 'Removed from Featured');
+    try {
+      const newState = !blog.featured;
+      const response = await api.patch(`/admin/blogs/${id}/featured`, { featured: newState });
+      if (response.data?.success) {
+        setBlogs(prev => prev.map(b => b.id === id ? { ...b, featured: newState } : b));
+        toast.success(newState ? 'Marked as Featured' : 'Removed from Featured');
+      }
+    } catch (error) {
+      toast.error('Failed to update featured status');
+    }
     setOpenDropdownId(null);
   };
 
@@ -150,16 +178,16 @@ const BlogManagement = () => {
     setOpenDropdownId(null);
   };
 
-  const handleDuplicate = (blog) => {
-    const duplicatedBlog = {
-      ...blog,
-      id: Math.max(0, ...blogs.map(b => b.id)) + 1,
-      title: `${blog.title} (Copy)`,
-      date: new Date().toISOString().split('T')[0],
-      views: 0
-    };
-    setBlogs(prev => [duplicatedBlog, ...prev]);
-    toast.success('Article duplicated successfully!');
+  const handleDuplicate = async (blog) => {
+    try {
+      const response = await api.post(`/admin/blogs/${blog.id}/duplicate`);
+      if (response.data?.success) {
+        toast.success('Article duplicated successfully!');
+        fetchBlogs();
+      }
+    } catch (error) {
+      toast.error('Failed to duplicate article');
+    }
     setOpenDropdownId(null);
   };
 
@@ -177,10 +205,17 @@ const BlogManagement = () => {
         </div>
         <div className="flex items-center gap-2 mt-1">
           <button
-            onClick={() => {
-              setBlogs(prev => prev.filter(b => b.id !== id));
-              toast.dismiss(t.id);
-              toast.success('Article deleted successfully!');
+            onClick={async () => {
+              try {
+                const response = await api.delete(`/admin/blogs/${id}`);
+                if (response.data?.success) {
+                  toast.dismiss(t.id);
+                  toast.success('Article deleted successfully!');
+                  fetchBlogs();
+                }
+              } catch (error) {
+                toast.error('Failed to delete article');
+              }
             }}
             className="flex-1 bg-red-600 hover:bg-red-700 text-white text-[12px] font-black px-4 py-3 rounded-full transition-all cursor-pointer active:scale-95 uppercase tracking-wider"
           >
@@ -207,18 +242,10 @@ const BlogManagement = () => {
     });
   };
 
-  const filteredBlogs = blogs.filter(blog => {
-    const matchesTab = activeTab === 'all' || blog.status.toLowerCase() === activeTab.toLowerCase();
-    const matchesSearch =
-      blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      blog.category.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesTab && matchesSearch;
-  });
-
-  const totalItems = filteredBlogs.length;
+  const currentItems = blogs;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentItems = filteredBlogs.slice(startIndex, startIndex + itemsPerPage);
+  // currentItems logic moved to fetchBlogs via API pagination
 
   const selectedBlog = currentItems.find(b => b.id === openDropdownId);
 
@@ -509,7 +536,7 @@ const BlogManagement = () => {
         <div className="px-6 py-6 bg-slate-50/50 border-t border-slate-100 flex flex-col nav:flex-row items-center justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-8 w-full nav:w-auto">
             <p className="text-sm text-black font-medium whitespace-nowrap">
-              Showing <span className="text-primary font-bold">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-primary font-bold">{Math.min(currentPage * itemsPerPage, filteredBlogs.length)}</span> of <span className="text-primary font-bold">{filteredBlogs.length}</span> articles
+              Showing <span className="text-primary font-bold">{Math.min(startIndex + 1, totalItems)}</span> to <span className="text-primary font-bold">{Math.min(startIndex + itemsPerPage, totalItems)}</span> of <span className="text-primary font-bold">{totalItems}</span> articles
             </p>
 
             <div

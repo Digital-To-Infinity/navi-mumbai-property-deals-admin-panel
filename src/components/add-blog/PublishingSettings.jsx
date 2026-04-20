@@ -1,4 +1,4 @@
-import { CheckCircle2, LayoutGrid, PencilLine } from 'lucide-react';
+import { CheckCircle2, LayoutGrid, PencilLine, Plus } from 'lucide-react';
 import CustomDropdown from '../property-form/CustomDropdown';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -7,6 +7,7 @@ const PublishingSettings = ({
     setCategory, 
     customCategory, 
     setCustomCategory, 
+    handleAddCategory,
     status, 
     setStatus, 
     categoryOptions 
@@ -37,17 +38,26 @@ const PublishingSettings = ({
                                 <label className="text-[12px] font-black text-brand-paragraph uppercase tracking-widest px-1">
                                     Custom Category Name
                                 </label>
-                                <div className="relative group">
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
-                                        <PencilLine size={18} />
+                                <div className="flex items-center gap-3">
+                                    <div className="relative group flex-1">
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
+                                            <PencilLine size={18} />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={customCategory}
+                                            onChange={(e) => setCustomCategory(e.target.value)}
+                                            placeholder="Enter your custom category..."
+                                            className="w-full bg-zinc-50/50 border border-brand-muted/50 rounded-2xl pl-12 pr-5 py-4 text-[14px] font-semibold focus:outline-none focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10 transition-all"
+                                        />
                                     </div>
-                                    <input
-                                        type="text"
-                                        value={customCategory}
-                                        onChange={(e) => setCustomCategory(e.target.value)}
-                                        placeholder="Enter your custom category..."
-                                        className="w-full bg-zinc-50/50 border border-brand-muted/50 rounded-2xl pl-12 pr-5 py-4 text-[14px] font-semibold focus:outline-none focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10 transition-all"
-                                    />
+                                    <button
+                                        onClick={handleAddCategory}
+                                        className="h-[58px] px-6 bg-brand-primary text-white rounded-2xl font-black text-[12px] uppercase tracking-wider hover:bg-brand-primary/90 transition-all active:scale-95 shadow-lg shadow-brand-primary/20 flex items-center gap-2 shrink-0 cursor-pointer"
+                                    >
+                                        <Plus size={18} />
+                                        <span>Add</span>
+                                    </button>
                                 </div>
                             </motion.div>
                         )}
