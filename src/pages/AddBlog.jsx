@@ -34,6 +34,7 @@ const AddBlog = () => {
     const [images, setImages] = useState([]);
     const [tags, setTags] = useState([]);
     const [tagInput, setTagInput] = useState('');
+    const [featured, setFeatured] = useState(false);
     const [categoryOptions, setCategoryOptions] = useState(defaultCategoryOptions);
     const [isLoadingCategories, setIsLoadingCategories] = useState(false);
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -60,6 +61,7 @@ const AddBlog = () => {
                 setAuthorRole(blog.author_role);
                 setReadTime(blog.read_time);
                 setStatus(blog.status);
+                setFeatured(blog.featured === 1 || blog.featured === true);
                 setTags(blog.tags || []);
                 // For images, we can't easily set File objects back, 
                 // so we store the URL. BlogImageUpload handles string URLs.
@@ -180,6 +182,7 @@ const AddBlog = () => {
         formData.append('authorRole', authorRole || 'Editor');
         formData.append('readTime', readTime || '5 min read');
         formData.append('status', finalStatus);
+        formData.append('featured', featured);
         formData.append('tags', JSON.stringify(tags));
         formData.append('date', new Date().toISOString().split('T')[0]);
 
@@ -251,6 +254,8 @@ const AddBlog = () => {
                     handleAddCategory={handleAddCategory}
                     status={status}
                     setStatus={setStatus}
+                    featured={featured}
+                    setFeatured={setFeatured}
                     categoryOptions={categoryOptions}
                 />
 
