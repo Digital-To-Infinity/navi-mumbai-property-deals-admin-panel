@@ -14,7 +14,8 @@ const categoryOptions = [
     { value: 'Buying Guide', label: 'Buying Guide' },
     { value: 'Investment', label: 'Investment' },
     { value: 'Lifestyle', label: 'Lifestyle' },
-    { value: 'Real Estate News', label: 'Real Estate News' }
+    { value: 'Real Estate News', label: 'Real Estate News' },
+    { value: 'Other', label: 'Other (Add Custom)' }
 ];
 
 
@@ -25,6 +26,7 @@ const AddBlog = () => {
     const [content, setContent] = useState('');
     const [status, setStatus] = useState('Published');
     const [category, setCategory] = useState('');
+    const [customCategory, setCustomCategory] = useState('');
     const [author, setAuthor] = useState('');
     const [authorRole, setAuthorRole] = useState('');
     const [readTime, setReadTime] = useState('');
@@ -70,7 +72,7 @@ const AddBlog = () => {
         title.trim() !== '' &&
         content.trim() !== '' &&
         content !== '<p><br></p>' &&
-        category !== '' &&
+        (category !== 'Other' ? category !== '' : customCategory.trim() !== '') &&
         author.trim() !== '' &&
         authorRole.trim() !== '' &&
         readTime.trim() !== '' &&
@@ -88,7 +90,7 @@ const AddBlog = () => {
             slug: title.toLowerCase().replace(/\s+/g, '-'),
             content,
             status: finalStatus,
-            category: category || 'Market Insights',
+            category: category === 'Other' ? customCategory : (category || 'Market Insights'),
             author: author || 'Admin',
             authorRole: authorRole || 'Editor',
             readTime: readTime || '5 min read',
@@ -144,6 +146,8 @@ const AddBlog = () => {
                 <PublishingSettings
                     category={category}
                     setCategory={setCategory}
+                    customCategory={customCategory}
+                    setCustomCategory={setCustomCategory}
                     status={status}
                     setStatus={setStatus}
                     categoryOptions={categoryOptions}
