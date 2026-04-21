@@ -172,34 +172,48 @@ const AddBlog = () => {
         const finalStatus = overridingStatus || status;
         const finalCategory = category === 'Other' ? customCategory : (category || 'Market Insights');
         
-        const formData = new FormData();
-        formData.append('title', title || 'Untitled Article');
-        formData.append('content', content);
-        formData.append('category', finalCategory);
-        formData.append('author', author || 'Admin');
-        formData.append('author_role', authorRole || 'Editor');
-        formData.append('read_time', readTime || '5 min read');
-        formData.append('status', finalStatus);
-        formData.append('featured', featured ? '1' : '0');
-        formData.append('tags', JSON.stringify(tags));
-        formData.append('date', new Date().toISOString().split('T')[0]);
-
-        // Handing cover image
-        if (images.length > 0) {
-            const coverImage = images[0];
-            if (coverImage.file) {
-                formData.append('coverImage', coverImage.file);
-            }
-            // If it's a string, it means it's an existing URL, 
-            // the backend update controller handles it if no new file is provided.
-        }
-
         try {
+            let finalCoverImageUrl = images.length > 0 && typeof images[0] === 'string' ? images[0] : '';
+            
+            // Step 1: Upload image if it's a new file
+            if (images.length > 0 && images[0].file) {
+                const imageFormData = new FormData();
+                imageFormData.append('image', images[0].file);
+                
+                toast.loading('Uploading image...', { id: 'uploading' });
+                const uploadResponse = await api.post('/upload/image', imageFormData);
+                toast.dismiss('uploading');
+                
+                if (uploadResponse.data?.url) {
+                    finalCoverImageUrl = uploadResponse.data.url;
+                } else {
+                    throw new Error('Failed to get image URL from server');
+                }
+            }
+
+            // Step 2: Prepare JSON payload
+            const payload = {
+                title: title || 'Untitled Article',
+                content: content,
+                category: finalCategory,
+                author: author || 'Admin',
+                author_role: authorRole || 'Editor',
+                authorRole: authorRole || 'Editor', // Send both to be safe
+                read_time: readTime || '5 min read',
+                readTime: readTime || '5 min read', // Send both to be safe
+                status: finalStatus,
+                featured: featured,
+                tags: tags, // Send as actual array in JSON
+                date: new Date().toISOString().split('T')[0],
+                cover_image_url: finalCoverImageUrl,
+                coverImage: finalCoverImageUrl // Send both to be safe
+            };
+
             let response;
             if (id) {
-                response = await api.put(`/admin/blogs/${id}`, formData);
+                response = await api.put(`/admin/blogs/${id}`, payload);
             } else {
-                response = await api.post('/admin/blogs', formData);
+                response = await api.post('/admin/blogs', payload);
             }
 
             if (response.data?.success) {
@@ -207,8 +221,9 @@ const AddBlog = () => {
                 navigate('/blogs');
             }
         } catch (error) {
+            toast.dismiss('uploading');
             console.error('Save error:', error);
-            toast.error(error.response?.data?.message || 'Failed to save article');
+            toast.error(error.response?.data?.message || error.message || 'Failed to save article');
         }
     };
 
