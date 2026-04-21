@@ -15,10 +15,13 @@ const ImageUpload = ({ formData, updateFormData }) => {
 
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files || []);
-        const newPreviews = files.map(f => URL.createObjectURL(f));
-        const updatedPreviews = [...previews, ...newPreviews];
-        setPreviews(updatedPreviews);
-        updateFormData("gallery", updatedPreviews);
+        const newImages = files.map(f => ({
+            file: f,
+            preview: URL.createObjectURL(f)
+        }));
+        const updated = [...previews, ...newImages];
+        setPreviews(updated);
+        updateFormData("gallery", updated);
     };
 
     const removeImage = (index) => {
@@ -78,20 +81,23 @@ const ImageUpload = ({ formData, updateFormData }) => {
                         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
                     >
                         <AnimatePresence>
-                            {previews.map((src, index) => (
-                                <Reorder.Item
-                                    key={src}
-                                    value={src}
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.8 }}
-                                    className="aspect-square relative rounded-2xl overflow-hidden group shadow-sm bg-zinc-100 cursor-grab active:cursor-grabbing"
-                                >
-                                    <img 
-                                        src={src} 
-                                        alt={`Property photo ${index + 1}`} 
-                                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                                    />
+                            {previews.map((img, index) => {
+                                const src = typeof img === 'string' ? img : img.preview;
+                                const key = typeof img === 'string' ? img : (img.file?.name + index);
+                                return (
+                                    <Reorder.Item
+                                        key={key}
+                                        value={img}
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.8 }}
+                                        className="aspect-square relative rounded-2xl overflow-hidden group shadow-sm bg-zinc-100 cursor-grab active:cursor-grabbing"
+                                    >
+                                        <img 
+                                            src={src} 
+                                            alt={`Property photo ${index + 1}`} 
+                                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                        />
                                     
                                     {/* Action Buttons overlay */}
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
@@ -122,7 +128,8 @@ const ImageUpload = ({ formData, updateFormData }) => {
                                         {index + 1}
                                     </div>
                                 </Reorder.Item>
-                            ))}
+                            );
+                        })}
                         </AnimatePresence>
                     </Reorder.Group>
                 )}

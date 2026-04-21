@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyForm from './AddProperty';
 import { toast } from 'react-hot-toast';
+import api from '../utils/api';
 import {
   Plus,
   Search,
@@ -43,7 +44,8 @@ const propertiesData = [
 ];
 
 const PropertyManagement = () => {
-  const [properties, setProperties] = useState(propertiesData);
+  const [properties, setProperties] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingProperty, setEditingProperty] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
@@ -185,35 +187,82 @@ const PropertyManagement = () => {
     setOpenDropdownId(null);
   };
 
-  const handleSave = (formData) => {
-    if (editingProperty) {
-      setProperties(prev => prev.map(p =>
-        p.id === editingProperty.id
-          ? {
-            ...p,
-            ...formData,
-            category: formData.propertyType || p.category, // Map propertyType back to category
-            id: p.id
+  const handleSave = async (data) => {
+    try {
+      const formData = new FormData();
+      
+      // Step 1: Append all basic fields
+      Object.entries(data).forEach(([key, value]) => {
+        if (key !== 'gallery' && key !== 'amenities' && key !== 'features' && key !== 'suitableFor' && key !== 'nearbyPlaces') {
+          formData.append(key, value);
+        }
+      });
+
+      // Step 2: Append arrays as JSON strings
+      formData.append('amenities', JSON.stringify(data.amenities || []));
+      formData.append('features', JSON.stringify(data.features || []));
+      formData.append('suitableFor', JSON.stringify(data.suitableFor || []));
+      formData.append('nearbyPlaces', JSON.stringify(data.nearbyPlaces || []));
+
+      // Step 3: Handle Gallery (Images)
+      if (data.gallery && data.gallery.length > 0) {
+        const existingImages = [];
+        data.gallery.forEach((img) => {
+          if (img.file) {
+            // New file to upload - MUST use 'gallery' key as per backend
+            formData.append('gallery', img.file);
+          } else if (typeof img === 'string') {
+            // Existing image URL
+            existingImages.push(img);
           }
-          : p
-      ));
-      toast.success('Property updated successfully!');
-    } else {
-      const newProperty = {
-        ...formData,
-        id: Math.max(0, ...properties.map(p => p.id)) + 1,
-        date: new Date().toISOString().split('T')[0],
-        status: 'Active',
-        category: formData.propertyType || 'Villa',
-        price: formData.price || '₹0',
-      };
-      setProperties(prev => [newProperty, ...prev]);
-      toast.success('Property published successfully!');
+        });
+        formData.append('existingGallery', JSON.stringify(existingImages));
+      }
+
+      toast.loading(editingProperty ? 'Updating property...' : 'Publishing property...', { id: 'saving-property' });
+
+      let response;
+      if (editingProperty) {
+        response = await api.put(`/admin/properties/${editingProperty.id || editingProperty._id}`, formData);
+      } else {
+        response = await api.post('/admin/properties', formData);
+      }
+
+      toast.dismiss('saving-property');
+
+      if (response.data?.success !== false) {
+        toast.success(editingProperty ? 'Property updated successfully!' : 'Property published successfully!');
+        setSearchParams({});
+        setShowForm(false);
+        setEditingProperty(null);
+        fetchProperties(); // We should implement this to refresh our list
+      }
+    } catch (error) {
+      toast.dismiss('saving-property');
+      console.error('Save property error:', error);
+      toast.error(error.response?.data?.message || 'Failed to save property');
     }
-    setSearchParams({});
-    setShowForm(false);
-    setEditingProperty(null);
   };
+
+  const fetchProperties = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get('/admin/properties');
+      if (response.data) {
+        setProperties(response.data.data || response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+      // Fallback to local data if API fails or is not yet ready
+      // setProperties(propertiesData);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProperties();
+  }, []);
 
   const handleDelete = (id) => {
     toast((t) => (
