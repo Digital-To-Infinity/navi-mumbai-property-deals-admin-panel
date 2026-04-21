@@ -175,14 +175,31 @@ const AddBlog = () => {
         try {
             const formData = new FormData();
             
-            // Step 1: Handle image
+            // Step 1: Handle images
             if (images.length > 0) {
-                if (images[0].file) {
-                    // New file being uploaded
-                    formData.append('coverImage', images[0].file);
-                } else if (typeof images[0] === 'string') {
-                    // Existing image URL
-                    formData.append('cover_image_url', images[0]);
+                // First image is always the coverImage
+                const coverImg = images[0];
+                if (coverImg.file) {
+                    formData.append('coverImage', coverImg.file);
+                } else if (typeof coverImg === 'string') {
+                    formData.append('cover_image_url', coverImg);
+                }
+
+                // Subsequent images are galleryImages
+                const existingGallery = [];
+                for (let i = 1; i < images.length; i++) {
+                    const img = images[i];
+                    if (img.file) {
+                        formData.append('galleryImages', img.file);
+                    } else if (typeof img === 'string') {
+                        existingGallery.push(img);
+                    } else if (img.preview && !img.file) {
+                        // This case handles existing images that might be objects
+                        existingGallery.push(img.preview);
+                    }
+                }
+                if (existingGallery.length > 0) {
+                    formData.append('existingGallery', JSON.stringify(existingGallery));
                 }
             }
 

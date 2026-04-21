@@ -209,8 +209,8 @@ const PropertyManagement = () => {
         const existingImages = [];
         data.gallery.forEach((img) => {
           if (img.file) {
-            // New file to upload - MUST use 'gallery' key as per backend
-            formData.append('gallery', img.file);
+            // New file to upload - MUST use 'galleryImages' key as per backend
+            formData.append('galleryImages', img.file);
           } else if (typeof img === 'string') {
             // Existing image URL
             existingImages.push(img);
