@@ -170,8 +170,9 @@ const BlogManagement = () => {
     setOpenDropdownId(null);
   };
 
-  const handleShare = (id) => {
-    const blogLink = `https://navimumbaipropertydeals.com/blog/${id}`;
+  const handleShare = (blog) => {
+    const slugOrId = blog.slug || blog.id;
+    const blogLink = `https://navimumbaipropertydeals.com/blog/${slugOrId}`;
     navigator.clipboard.writeText(blogLink).then(() => {
       toast.success('Blog link copied to clipboard!');
     });
@@ -388,6 +389,15 @@ const BlogManagement = () => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end space-x-2">
+                        {blog.status === 'Draft' && (
+                          <button
+                            onClick={() => handleStatusUpdate(blog.id, 'Published')}
+                            className="p-2 text-emerald-500 hover:text-emerald-700 transition-colors hover:bg-emerald-50 rounded-lg border border-transparent hover:border-emerald-100 cursor-pointer"
+                            title="Quick Publish"
+                          >
+                            <CheckCircle size={18} />
+                          </button>
+                        )}
                         <NavLink
                           to={`/blogs/edit/${blog.id}`}
                           className="p-2 text-slate-500 hover:text-black transition-colors hover:bg-white rounded-lg border border-transparent hover:border-slate-100 cursor-pointer"
@@ -479,7 +489,7 @@ const BlogManagement = () => {
                       <span>Preview Article</span>
                     </button>
                     <button
-                      onClick={() => handleShare(selectedBlog.id)}
+                      onClick={() => handleShare(selectedBlog)}
                       className="w-full flex items-center space-x-3 px-4 py-2.5 font-semibold text-sm text-slate-600 hover:bg-slate-50 hover:text-black transition-colors cursor-pointer text-left"
                     >
                       <Share2 size={16} />

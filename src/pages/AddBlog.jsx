@@ -63,8 +63,6 @@ const AddBlog = () => {
                 setStatus(blog.status);
                 setFeatured(blog.featured === 1 || blog.featured === true);
                 setTags(blog.tags || []);
-                // For images, we can't easily set File objects back, 
-                // so we store the URL. BlogImageUpload handles string URLs.
                 if (blog.cover_image_url) {
                     setImages([blog.cover_image_url]);
                 }

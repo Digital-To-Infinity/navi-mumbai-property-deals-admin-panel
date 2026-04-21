@@ -102,16 +102,32 @@ const Dashboard = () => {
   const [stats, setStats] = useState({
     totalProperties: 0,
     activeListings: 0,
-    newLeads: 0
+    newLeads: 0,
+    draftArticles: 0,
+    pendingReviews: 0,
+    resolvedLeads: 0
   });
+  const [recentBlogs, setRecentBlogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 426);
     window.addEventListener('resize', handleResize);
     fetchStats();
+    fetchRecentBlogs();
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const fetchRecentBlogs = async () => {
+    try {
+      const response = await api.get('/admin/dashboard/recent-blogs');
+      if (response.data) {
+        setRecentBlogs(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching recent blogs:', error);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -119,9 +135,12 @@ const Dashboard = () => {
       const response = await api.get('/admin/dashboard/stats');
       if (response.data) {
         setStats({
-            totalProperties: response.data.totalProperties || 0,
-            activeListings: response.data.activeListings || 0,
-            newLeads: response.data.newLeads || 0
+          totalProperties: response.data.totalProperties || 0,
+          activeListings: response.data.activeListings || 0,
+          newLeads: response.data.newLeads || 0,
+          draftArticles: response.data.draftArticles || 0,
+          pendingReviews: response.data.pendingReviews || 0,
+          resolvedLeads: response.data.resolvedLeads || 0
         });
       }
     } catch (error) {
@@ -396,19 +415,23 @@ const Dashboard = () => {
               </NavLink>
             </div>
             <div className="p-4 space-y-4">
-              {blogsData.map((blog) => (
-                <div key={blog.id} className="group">
-                  <p className="text-base font-bold text-black group-hover:text-primary transition-colors line-clamp-1">
-                    {blog.title}
-                  </p>
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex items-center text-sm text-slate-500">
-                      <Eye size={14} className="mr-1" /> {blog.views.toLocaleString()} views
+              {recentBlogs.length > 0 ? (
+                recentBlogs.map((blog) => (
+                  <div key={blog.id} className="group">
+                    <p className="text-base font-bold text-black group-hover:text-primary transition-colors line-clamp-1">
+                      {blog.title}
+                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="flex items-center text-sm text-slate-500">
+                        <Eye size={14} className="mr-1" /> {(blog.views || 0).toLocaleString()} views
+                      </div>
+                      <span className="text-[12px] text-slate-500 font-medium">{blog.date}</span>
                     </div>
-                    <span className="text-[12px] text-slate-500 font-medium">{blog.date}</span>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-slate-500 text-center py-4">No recent blogs</p>
+              )}
             </div>
           </div>
 
@@ -423,21 +446,21 @@ const Dashboard = () => {
                   <CheckCircle2 size={18} className="mr-2 text-emerald-500" />
                   Resolved Leads
                 </div>
-                <span className="text-sm font-bold text-slate-900">124</span>
+                <span className="text-sm font-bold text-slate-900">{stats.resolvedLeads}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center text-base font-medium text-slate-600">
                   <Clock size={18} className="mr-2 text-amber-500" />
                   Pending Reviews
                 </div>
-                <span className="text-sm font-bold text-slate-900">12</span>
+                <span className="text-sm font-bold text-slate-900">{stats.pendingReviews}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center text-base font-medium text-slate-600">
                   <FileText size={18} className="mr-2 text-indigo-500" />
                   Draft Articles
                 </div>
-                <span className="text-sm font-bold text-slate-900">4</span>
+                <span className="text-sm font-bold text-slate-900">{stats.draftArticles}</span>
               </div>
             </div>
           </div>
