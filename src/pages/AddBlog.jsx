@@ -177,10 +177,10 @@ const AddBlog = () => {
         formData.append('content', content);
         formData.append('category', finalCategory);
         formData.append('author', author || 'Admin');
-        formData.append('authorRole', authorRole || 'Editor');
-        formData.append('readTime', readTime || '5 min read');
+        formData.append('author_role', authorRole || 'Editor');
+        formData.append('read_time', readTime || '5 min read');
         formData.append('status', finalStatus);
-        formData.append('featured', featured);
+        formData.append('featured', featured ? '1' : '0');
         formData.append('tags', JSON.stringify(tags));
         formData.append('date', new Date().toISOString().split('T')[0]);
 
@@ -197,13 +197,9 @@ const AddBlog = () => {
         try {
             let response;
             if (id) {
-                response = await api.put(`/admin/blogs/${id}`, formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                response = await api.put(`/admin/blogs/${id}`, formData);
             } else {
-                response = await api.post('/admin/blogs', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                response = await api.post('/admin/blogs', formData);
             }
 
             if (response.data?.success) {

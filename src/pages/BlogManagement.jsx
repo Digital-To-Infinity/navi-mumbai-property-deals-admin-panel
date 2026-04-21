@@ -58,15 +58,16 @@ const BlogManagement = () => {
   const fetchBlogs = async () => {
     setLoading(true);
     try {
-      const statusParam = activeTab === 'all' ? '' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
-      const response = await api.get('/admin/blogs', {
-        params: {
-          status: statusParam,
-          search: searchTerm,
-          page: currentPage,
-          limit: itemsPerPage
-        }
-      });
+      const params = {
+        search: searchTerm,
+        page: currentPage,
+        limit: itemsPerPage
+      };
+      if (activeTab !== 'all') {
+        params.status = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
+      }
+      
+      const response = await api.get('/admin/blogs', { params });
       if (response.data) {
         setBlogs(response.data.data);
         setTotalItems(response.data.total);
