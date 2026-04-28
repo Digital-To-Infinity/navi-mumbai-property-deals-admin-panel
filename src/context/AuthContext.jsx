@@ -19,7 +19,10 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const response = await api.post('/auth/admin/login', { email, password });
+            const response = await api.post('/auth/admin/login', {
+                email: email.trim(),
+                password: password.trim(),
+            });
             
             if (response.data && response.data.token) {
                 const userData = response.data.user;
@@ -35,7 +38,7 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (error) {
             console.error('Login error:', error);
-            throw error;
+            throw new Error(error.response?.data?.message || error.message || 'Login failed');
         }
     };
 

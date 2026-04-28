@@ -20,7 +20,7 @@ const Login = () => {
       toast.success('Successfully logged in!', { id: loadingToast });
       navigate('/');
     } catch (error) {
-      toast.error('Invalid credentials. Access Denied.', { id: loadingToast });
+      toast.error(error.message || 'Invalid credentials. Access Denied.', { id: loadingToast });
       console.error(error);
     }
   };

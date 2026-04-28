@@ -8,7 +8,26 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  base: '/', 
+  base: '/',
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://api.navimumbaipropertydeals.com',
+        changeOrigin: true,
+        secure: true,
+        headers: {
+          origin: 'https://navimumbaipropertydeals.com',
+          referer: 'https://navimumbaipropertydeals.com/',
+        },
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => {
+            proxyReq.setHeader('Origin', 'https://navimumbaipropertydeals.com')
+            proxyReq.setHeader('Referer', 'https://navimumbaipropertydeals.com/')
+          })
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
